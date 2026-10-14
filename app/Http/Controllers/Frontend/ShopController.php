@@ -13,7 +13,7 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Bundle::with(['category', 'products']);
+        $query = Bundle::active()->with(['category', 'products']);
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -64,10 +64,10 @@ class ShopController extends Controller
         }
 
         $bundles = $query->paginate(12)->withQueryString();
-        $categories = Category::withCount('bundles')->get();
+        $categories = Category::withCount(['bundles' => fn($q) => $q->active()])->get();
 
         // Get distinct levels for the filter dropdown
-        $levels = Bundle::whereNotNull('level')
+        $levels = Bundle::active()->whereNotNull('level')
             ->where('level', '!=', '')
             ->distinct()
             ->orderBy('level', 'asc')
@@ -78,6 +78,8 @@ class ShopController extends Controller
 
     public function showBundle(Bundle $bundle)
     {
+        abort_unless($bundle->is_active, 404);
+
         $bundle->load([
             'category',
             'products' => function ($q) {
@@ -94,7 +96,8 @@ class ShopController extends Controller
         ]);
 
         // Fetch sibling bundles in the same curriculum category
-        $otherBundles = Bundle::where('category_id', $bundle->category_id)
+        $otherBundles = Bundle::active()
+            ->where('category_id', $bundle->category_id)
             ->where('id', '!=', $bundle->id)
             ->orderBy('level', 'asc')
             ->get();

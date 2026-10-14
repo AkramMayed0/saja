@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Bundle;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -12,7 +13,7 @@ class CartService
     /**
      * Handle adding a product to cart for guests (session_id) or registered users (user_id).
      */
-    public function addToCart($productId, $quantity = 1)
+    public function addToCart($productId, $quantity = 1, ?float $overrideUnitPrice = null)
     {
         $userId = auth()->id();
         $sessionId = Session::getId();
@@ -36,7 +37,7 @@ class CartService
         $currencyService = app(\App\Services\CurrencyService::class);
         $userCurrency = $currencyService->getUserCurrency();
         $userRegion = $currencyService->getUserRegion();
-        $effectivePrice = $currencyService->getProductPrice($product, $userRegion);
+        $effectivePrice = $overrideUnitPrice !== null ? $overrideUnitPrice : $currencyService->getProductPrice($product, $userRegion);
 
         if (!$cart->currency || $cart->currency !== $userCurrency) {
             $cart->currency = $userCurrency;
@@ -67,11 +68,31 @@ class CartService
      */
     public function addBundleToCart($bundleId, $quantity = 1)
     {
-        $bundle = \App\Models\Bundle::with('products')->findOrFail($bundleId);
-        $cart = null;
+        $bundle = Bundle::active()->with('products')->findOrFail($bundleId);
 
-        foreach ($bundle->products as $product) {
-            $cart = $this->addToCart($product->id, $quantity);
+        $targetBundlePrice = $bundle->current_price;
+        $originalSum = $bundle->original_price;
+
+        if ($bundle->products->isNotEmpty()) {
+            $products = $bundle->products->values();
+            $totalProducts = $products->count();
+            $isDiscounted = ($targetBundlePrice < $originalSum && $originalSum > 0);
+            $allocatedSoFar = 0.0;
+
+            foreach ($products as $index => $product) {
+                if ($isDiscounted) {
+                    if ($index === $totalProducts - 1) {
+                        $unitPrice = round($targetBundlePrice - $allocatedSoFar, 2);
+                    } else {
+                        $unitPrice = round(($product->current_price / $originalSum) * $targetBundlePrice, 2);
+                        $allocatedSoFar += $unitPrice;
+                    }
+                } else {
+                    $unitPrice = $product->current_price;
+                }
+
+                $this->addToCart($product->id, $quantity, $unitPrice);
+            }
         }
 
         return $bundle;

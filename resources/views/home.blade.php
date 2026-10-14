@@ -103,17 +103,7 @@
     <div class="relative w-full overflow-hidden flex" dir="ltr">
         <div class="flex w-max animate-marquee gap-5 hover:[animation-play-state:paused]" style="animation-duration: 90s;">
             @php
-                $books = ($sliderProducts ?? \App\Models\Product::where('title', 'not like', '%Cards%')
-                    ->whereNotNull('image')
-                    ->orderBy('category_id', 'asc')
-                    ->orderByRaw("CASE book_type 
-                        WHEN 'student' THEN 1 
-                        WHEN 'combined' THEN 2 
-                        WHEN 'workbook' THEN 3 
-                        WHEN 'teacher' THEN 4 
-                        ELSE 5 END ASC")
-                    ->orderBy('level', 'asc')
-                    ->get());
+                $books = $sliderProducts ?? collect();
                 $tickerProducts = $books->concat($books);
             @endphp
             @foreach($tickerProducts as $product)

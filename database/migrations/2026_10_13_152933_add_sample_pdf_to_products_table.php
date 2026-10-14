@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('products', 'sample_pdf')) {
+                $table->string('sample_pdf')->nullable()->after('image');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('products', 'sample_pdf')) {
+                $table->dropColumn('sample_pdf');
+            }
         });
     }
 };

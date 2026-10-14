@@ -9,9 +9,17 @@ use App\Models\Category;
 use App\Models\Bundle;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageOptimizationService;
 
 class ProductController extends Controller
 {
+    protected ImageOptimizationService $imageOptimizationService;
+
+    public function __construct(ImageOptimizationService $imageOptimizationService)
+    {
+        $this->imageOptimizationService = $imageOptimizationService;
+    }
+
     public function index(Request $request)
     {
         $query = Product::with('category')->latest();
@@ -80,7 +88,7 @@ class ProductController extends Controller
             'format' => 'nullable|string|max:255',
             'isbn' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
             'sample_pdf' => 'nullable|file|mimes:pdf|max:51200'
         ]);
 
@@ -108,60 +116,11 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = uniqid('book_') . '.webp';
-            
-            // Ensure directory exists
-            $dirPath = storage_path('app/public/products');
-            if (!file_exists($dirPath)) {
-                mkdir($dirPath, 0755, true);
-            }
-            
-            $path = $dirPath . '/' . $filename;
-            
-            if (extension_loaded('gd')) {
-                // Temporarily increase memory limit for large images
-                ini_set('memory_limit', '-1');
-                
-                // Compress and convert to webp using native GD
-                $info = getimagesize($file->getRealPath());
-                $mime = $info['mime'];
-                
-                switch ($mime) {
-                    case 'image/jpeg': $source = \imagecreatefromjpeg($file->getRealPath()); break;
-                    case 'image/png': $source = \imagecreatefrompng($file->getRealPath()); break;
-                    case 'image/webp': $source = \imagecreatefromwebp($file->getRealPath()); break;
-                    default: $source = \imagecreatefromstring(file_get_contents($file->getRealPath())); break;
-                }
-                
-                if ($source) {
-                    $width = \imagesx($source);
-                    $height = \imagesy($source);
-                    
-                    // Resize if wider than 800px
-                    $newWidth = $width > 800 ? 800 : $width;
-                    $newHeight = floor($height * ($newWidth / $width));
-                    
-                    $target = \imagecreatetruecolor($newWidth, $newHeight);
-                    
-                    // Handle transparency for PNGs
-                    if ($mime == 'image/png' || $mime == 'image/webp') {
-                        \imagealphablending($target, false);
-                        \imagesavealpha($target, true);
-                        $transparent = \imagecolorallocatealpha($target, 255, 255, 255, 127);
-                        \imagefilledrectangle($target, 0, 0, $newWidth, $newHeight, $transparent);
-                    }
-                    
-                    \imagecopyresampled($target, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                    \imagewebp($target, $path, 80); // 80 is quality
-                    
-                    \imagedestroy($target);
-                    \imagedestroy($source);
-                }
-                $data['image'] = 'products/' . $filename;
-            } else {
-                $data['image'] = $file->store('products', 'public');
-            }
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'products',
+                'book_'
+            );
         }
 
         Product::create($data);
@@ -192,7 +151,7 @@ class ProductController extends Controller
             'format' => 'nullable|string|max:255',
             'isbn' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
             'sample_pdf' => 'nullable|file|mimes:pdf|max:51200',
             'remove_sample_pdf' => 'nullable|boolean',
         ]);
@@ -232,60 +191,11 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->image);
             }
             
-            $file = $request->file('image');
-            $filename = uniqid('book_') . '.webp';
-            
-            // Ensure directory exists
-            $dirPath = storage_path('app/public/products');
-            if (!file_exists($dirPath)) {
-                mkdir($dirPath, 0755, true);
-            }
-            
-            $path = $dirPath . '/' . $filename;
-            
-            if (extension_loaded('gd')) {
-                // Temporarily increase memory limit for large images
-                ini_set('memory_limit', '-1');
-                
-                // Compress and convert to webp using native GD
-                $info = getimagesize($file->getRealPath());
-                $mime = $info['mime'];
-                
-                switch ($mime) {
-                    case 'image/jpeg': $source = \imagecreatefromjpeg($file->getRealPath()); break;
-                    case 'image/png': $source = \imagecreatefrompng($file->getRealPath()); break;
-                    case 'image/webp': $source = \imagecreatefromwebp($file->getRealPath()); break;
-                    default: $source = \imagecreatefromstring(file_get_contents($file->getRealPath())); break;
-                }
-                
-                if ($source) {
-                    $width = \imagesx($source);
-                    $height = \imagesy($source);
-                    
-                    // Resize if wider than 800px
-                    $newWidth = $width > 800 ? 800 : $width;
-                    $newHeight = floor($height * ($newWidth / $width));
-                    
-                    $target = \imagecreatetruecolor($newWidth, $newHeight);
-                    
-                    // Handle transparency for PNGs
-                    if ($mime == 'image/png' || $mime == 'image/webp') {
-                        \imagealphablending($target, false);
-                        \imagesavealpha($target, true);
-                        $transparent = \imagecolorallocatealpha($target, 255, 255, 255, 127);
-                        \imagefilledrectangle($target, 0, 0, $newWidth, $newHeight, $transparent);
-                    }
-                    
-                    \imagecopyresampled($target, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                    \imagewebp($target, $path, 80); // 80 is quality
-                    
-                    \imagedestroy($target);
-                    \imagedestroy($source);
-                }
-                $data['image'] = 'products/' . $filename;
-            } else {
-                $data['image'] = $file->store('products', 'public');
-            }
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'products',
+                'book_'
+            );
         }
 
         $product->update($data);

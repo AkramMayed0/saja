@@ -24,11 +24,6 @@ class CurrencyService
      */
     public function resolveUserRegion(?Request $request = null): string
     {
-        // Clear any stale manual override from previous testing
-        if (Session::has('region_manually_set')) {
-            Session::forget(['region_manually_set', 'user_region', 'user_currency', 'detected_country']);
-        }
-
         // 1. If region already resolved in this session, return it immediately
         if (Session::has('user_region')) {
             return Session::get('user_region');

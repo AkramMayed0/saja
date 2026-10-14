@@ -40,21 +40,24 @@ class AdminController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('total_amount');
 
-        // 3. Pending Orders (Action Required)
-        $pendingOrdersCount = Order::where('status', 'pending')->count();
-
-        // 4. Today's Orders vs Yesterday's
+        // 3. Today's Orders vs Yesterday's
         $todayOrdersCount = Order::whereDate('created_at', today())->count();
         $yesterdayOrdersCount = Order::whereDate('created_at', today()->subDay())->count();
 
-        // 5. Order Status Breakdown
-        $totalOrders = Order::count();
+        // 4. Order Status Breakdown & Counts (Single Grouped Query)
+        $rawCounts = Order::select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         $statusCounts = [
-            'pending' => Order::where('status', 'pending')->count(),
-            'processing' => Order::where('status', 'processing')->count(),
-            'completed' => Order::where('status', 'completed')->count(),
-            'cancelled' => Order::where('status', 'cancelled')->count(),
+            'pending'    => (int) $rawCounts->get('pending', 0),
+            'processing' => (int) $rawCounts->get('processing', 0),
+            'completed'  => (int) $rawCounts->get('completed', 0),
+            'cancelled'  => (int) $rawCounts->get('cancelled', 0),
         ];
+        $totalOrders = array_sum($statusCounts);
+        $pendingOrdersCount = $statusCounts['pending'];
+
         $statusPercentages = [];
         foreach ($statusCounts as $key => $count) {
             $statusPercentages[$key] = $totalOrders > 0 ? round(($count / $totalOrders) * 100, 1) : 0;

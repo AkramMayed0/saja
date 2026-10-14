@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use App\Services\ImageOptimizationService;
 
 class CategoryController extends Controller
 {
+    protected ImageOptimizationService $imageOptimizationService;
+
+    public function __construct(ImageOptimizationService $imageOptimizationService)
+    {
+        $this->imageOptimizationService = $imageOptimizationService;
+    }
+
     public function index()
     {
         $categories = Category::withCount('products')->latest()->paginate(15);
@@ -24,7 +33,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
-            'image' => 'nullable|image|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
         ]);
 
         $data = [
@@ -33,7 +42,11 @@ class CategoryController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'categories',
+                'cat_'
+            );
         }
 
         Category::create($data);
@@ -50,7 +63,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
-            'image' => 'nullable|image|max:5120'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
         ]);
 
         $data = [
@@ -59,10 +72,14 @@ class CategoryController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            if ($category->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($category->image)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($category->image);
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
             }
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'categories',
+                'cat_'
+            );
         }
 
         $category->update($data);
@@ -76,8 +93,8 @@ class CategoryController extends Controller
             return back()->with('error', __('لا يمكن حذف قسم يحتوي على منتجات.'));
         }
         
-        if ($category->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($category->image)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($category->image);
+        if ($category->image && Storage::disk('public')->exists($category->image)) {
+            Storage::disk('public')->delete($category->image);
         }
 
         $category->delete();

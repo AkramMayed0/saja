@@ -9,9 +9,17 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageOptimizationService;
 
 class BundleController extends Controller
 {
+    protected ImageOptimizationService $imageOptimizationService;
+
+    public function __construct(ImageOptimizationService $imageOptimizationService)
+    {
+        $this->imageOptimizationService = $imageOptimizationService;
+    }
+
     public function index(Request $request)
     {
         $query = Bundle::with('category')->withCount('products')->latest();
@@ -52,7 +60,7 @@ class BundleController extends Controller
             'price_sar' => 'required|numeric|min:0',
             'price_usd' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
             'is_active' => 'nullable|boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
@@ -72,10 +80,11 @@ class BundleController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = uniqid('bundle_') . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('bundles', $filename, 'public');
-            $data['image'] = $path;
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'bundles',
+                'bundle_'
+            );
         }
 
         $bundle = Bundle::create($data);
@@ -107,7 +116,7 @@ class BundleController extends Controller
             'price_sar' => 'required|numeric|min:0',
             'price_usd' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
             'is_active' => 'nullable|boolean',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
@@ -132,10 +141,11 @@ class BundleController extends Controller
             if ($bundle->image && Storage::disk('public')->exists($bundle->image)) {
                 Storage::disk('public')->delete($bundle->image);
             }
-            $file = $request->file('image');
-            $filename = uniqid('bundle_') . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('bundles', $filename, 'public');
-            $data['image'] = $path;
+            $data['image'] = $this->imageOptimizationService->storeAsWebp(
+                $request->file('image'),
+                'bundles',
+                'bundle_'
+            );
         }
 
         $bundle->update($data);
