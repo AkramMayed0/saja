@@ -33,20 +33,48 @@ class CartService
             Session::put('guest_cart_id', $cart->id);
         }
 
+        $currencyService = app(\App\Services\CurrencyService::class);
+        $userCurrency = $currencyService->getUserCurrency();
+        $userRegion = $currencyService->getUserRegion();
+        $effectivePrice = $currencyService->getProductPrice($product, $userRegion);
+
+        if (!$cart->currency || $cart->currency !== $userCurrency) {
+            $cart->currency = $userCurrency;
+            $cart->save();
+        }
+
         $cartItem = $cart->cartItems()->where('product_id', $productId)->first();
 
         if ($cartItem) {
             $cartItem->quantity += $quantity;
+            $cartItem->price = $effectivePrice;
+            $cartItem->currency = $userCurrency;
             $cartItem->save();
         } else {
             $cart->cartItems()->create([
                 'product_id' => $productId,
                 'quantity' => $quantity,
-                'price' => $product->price ?? 0,
+                'price' => $effectivePrice,
+                'currency' => $userCurrency,
             ]);
         }
 
         return $cart;
+    }
+
+    /**
+     * Handle adding all products in a bundle to the cart in a single action.
+     */
+    public function addBundleToCart($bundleId, $quantity = 1)
+    {
+        $bundle = \App\Models\Bundle::with('products')->findOrFail($bundleId);
+        $cart = null;
+
+        foreach ($bundle->products as $product) {
+            $cart = $this->addToCart($product->id, $quantity);
+        }
+
+        return $bundle;
     }
 
     /**

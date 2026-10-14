@@ -44,12 +44,35 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id'
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'nullable|integer|min:1'
         ]);
 
-        $this->cartService->addToCart($request->product_id, 1);
+        $quantity = $request->input('quantity', 1);
+        $this->cartService->addToCart($request->product_id, $quantity);
+
+        if ($request->boolean('buy_now')) {
+            return redirect()->route('cart.index')->with('success', __('تمت إضافة المنتج بنجاح'));
+        }
 
         return back()->with('success', __('تمت إضافة المنتج للسلة بنجاح'));
+    }
+
+    public function addBundle(Request $request)
+    {
+        $request->validate([
+            'bundle_id' => 'required|exists:bundles,id',
+            'quantity' => 'nullable|integer|min:1'
+        ]);
+
+        $quantity = $request->input('quantity', 1);
+        $bundle = $this->cartService->addBundleToCart($request->bundle_id, $quantity);
+
+        if ($request->boolean('buy_now')) {
+            return redirect()->route('cart.index')->with('success', __('تمت إضافة باقة :name كاملة إلى السلة', ['name' => $bundle->name]));
+        }
+
+        return back()->with('success', __('تمت إضافة جميع مكونات :name إلى السلة بنجاح!', ['name' => $bundle->name]));
     }
 
     public function update(Request $request, $itemId)

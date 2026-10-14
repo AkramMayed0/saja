@@ -18,7 +18,7 @@
             <!-- Name -->
             <div class="mb-5">
                 <label for="name" class="block font-bold text-sm text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{{ __('الاسم بالكامل') }}</label>
-                <input id="name" class="block w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:bg-white dark:focus:bg-gray-800 focus:border-primary-500 focus:ring-primary-500 rounded-full py-3 px-5 shadow-sm transition-colors duration-300 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="محمد أحمد" />
+                <input id="name" class="block w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:bg-white dark:focus:bg-gray-800 focus:border-primary-500 focus:ring-primary-500 rounded-full py-3 px-5 shadow-sm transition-colors duration-300 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="{{ __('محمد أحمد') }}" />
                 @error('name')
                     <p class="text-red-500 dark:text-red-400 text-xs mt-2 font-bold">{{ $message }}</p>
                 @enderror
@@ -64,7 +64,7 @@
                         <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
                     </div>
                     <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 font-medium">أو</span>
+                        <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 font-medium">{{ __('أو') }}</span>
                     </div>
                 </div>
                 <div class="mt-4">

@@ -52,7 +52,7 @@ class StoreFlowTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect('/admin/dashboard');
+        $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($admin);
     }
 
@@ -62,9 +62,9 @@ class StoreFlowTest extends TestCase
             'is_admin' => false,
         ]);
 
-        $response = $this->actingAs($user)->get('/admin/dashboard');
-
-        $response->assertStatus(403);
+        $response = $this->actingAs($user)->get(route('admin.dashboard'));
+        $response->assertRedirect(route('home'));
+        $response->assertSessionHas('error');
     }
 
     public function test_checkout_process_creates_order_and_clears_cart()

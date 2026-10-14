@@ -84,7 +84,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 dark:border-gray-700 pb-4 mb-4 transition-colors duration-300">
                         <div>
                             <span class="text-gray-400 dark:text-gray-500 text-xs font-bold bg-gray-50 dark:bg-gray-900 px-2 py-1 rounded-full mb-2 inline-block transition-colors duration-300">{{ __('طلب رقم') }}</span>
-                            <h4 class="font-extrabold text-lg text-gray-900 dark:text-white mb-1 transition-colors duration-300">#{{ $order->id }}</h4>
+                            <h4 class="font-extrabold text-lg text-gray-900 dark:text-white mb-1 transition-colors duration-300"><a href="{{ route('orders.show', $order) }}" class="hover:text-primary-600 hover:underline">#{{ $order->id }}</a></h4>
                             <span class="text-sm text-gray-400 font-medium">{{ $order->created_at->format('Y-m-d H:i') }}</span>
                         </div>
                         <div class="mt-4 sm:mt-0 text-right">
@@ -120,7 +120,7 @@
                                     </span>
                                 @endif
                             @endif
-                            <div class="font-black text-primary-600 dark:text-primary-400 text-xl transition-colors duration-300">${{ number_format($order->total_amount, 2) }}</div>
+                            <div class="font-black text-primary-600 dark:text-primary-400 text-xl transition-colors duration-300">{{ $order->formatted_total }}</div>
                         </div>
                     </div>
                     
@@ -133,10 +133,30 @@
                                     </div>
                                     <span class="font-bold text-gray-700 dark:text-gray-200 transition-colors duration-300">{{ $item->product->title ?? __('منتج غير متاح') }}</span>
                                 </div>
-                                <span class="font-bold text-gray-600 dark:text-gray-300 transition-colors duration-300">${{ number_format($item->price, 2) }}</span>
+                                <span class="font-bold text-gray-600 dark:text-gray-300 transition-colors duration-300">{{ number_format($item->price, 2) }} {{ $order->currency_symbol ?? ($order->currency === 'USD' ? '$' : 'ر.س') }}</span>
                             </li>
                         @endforeach
                     </ul>
+
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 {{ $order->items->isNotEmpty() ? 'border-t border-gray-100 pt-4 dark:border-gray-700' : '' }}">
+                        <a href="{{ route('orders.show', $order) }}" class="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-5 py-2 text-sm font-bold text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-800/50 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50">
+                            {{ __('عرض التفاصيل') }}
+                            <svg class="h-4 w-4 ltr:-scale-x-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                        </a>
+
+                        @if($order->canBeCancelledByCustomer())
+                            <form action="{{ route('orders.cancel', $order) }}" method="POST" onsubmit="return confirm(@js(__('هل أنت متأكد من إلغاء هذا الطلب؟')))">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-5 py-2 text-sm font-bold text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/50 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    {{ __('إلغاء الطلب') }}
+                                </button>
+                            </form>
+                        @elseif(in_array($order->status, ['pending', 'processing']))
+                            <p class="basis-full text-xs font-medium text-gray-400">{{ __('لا يمكن إلغاء الطلب بعد بدء التجهيز أو التوصيل. للمساعدة يرجى التواصل معنا.') }}</p>
+                        @endif
+                    </div>
 
                     @if($order->delivery_status === 'out_for_delivery' || $order->delivery_status === 'assigned')
                         <div class="mt-6 border-t border-gray-100 dark:border-gray-700 pt-6">

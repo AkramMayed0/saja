@@ -74,7 +74,7 @@
                                 <span class="font-bold text-gray-800 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ $item->product->title }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium transition-colors">{{ __('الكمية') }}: {{ $item->quantity }}</span>
                             </div>
-                            <span class="font-extrabold text-primary-600 dark:text-primary-400 whitespace-nowrap bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-full text-sm">{{ number_format($item->price * $item->quantity, 2) }} $</span>
+                            <span class="font-extrabold text-primary-600 dark:text-primary-400 whitespace-nowrap bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-full text-sm">{{ number_format($item->price * $item->quantity, 2) }} {{ $currencySymbol ?? '$' }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -82,7 +82,7 @@
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6 transition-colors duration-300 mt-2">
                     <div class="flex justify-between items-center text-2xl font-black text-gray-900 dark:text-white">
                         <span>{{ __('الإجمالي') }}</span>
-                        <span class="text-primary-600 dark:text-primary-400">{{ number_format($total, 2) }} $</span>
+                        <span class="text-primary-600 dark:text-primary-400">{{ number_format($total, 2) }} {{ $currencySymbol ?? '$' }}</span>
                     </div>
                 </div>
             </div>

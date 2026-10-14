@@ -21,18 +21,20 @@ class ReviewController extends Controller
             [
                 'rating' => $request->rating,
                 'comment' => $request->comment,
+                'is_approved' => false,
             ]
         );
 
-        // Update product's rating and reviews_count
-        $avgRating = $product->reviews()->avg('rating');
-        $reviewsCount = $product->reviews()->count();
+        // Update product's rating and reviews_count using approved reviews only
+        $approvedReviews = $product->reviews()->where('is_approved', true);
+        $avgRating = $approvedReviews->avg('rating') ?? 0;
+        $reviewsCount = $approvedReviews->count();
 
         $product->update([
             'rating' => round($avgRating, 1),
             'reviews_count' => $reviewsCount,
         ]);
 
-        return back()->with('success', __('تم حفظ تقييمك بنجاح.'));
+        return back()->with('success', __('شكراً لك! تم إرسال تقييمك بنجاح وسيظهر بعد مراجعته واعتماده.'));
     }
 }

@@ -1,8 +1,9 @@
 @extends('layouts.store')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-colors duration-300">
-    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-8 transition-colors duration-300">{{ __('سلة المشتريات') }}</h2>
+<x-page-header :title="__('سلة المشتريات')" :subtitle="__('راجع منتجاتك وأكمل عملية الشراء')" />
+
+<div class="container-x py-10">
 
     @if(!$cart || $cart->cartItems->isEmpty())
         <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-sm p-12 text-center border border-gray-200 dark:border-gray-700 transition-colors duration-300">
@@ -19,14 +20,18 @@
                     <ul class="divide-y divide-gray-100 dark:divide-gray-700 transition-colors duration-300">
                         @foreach($cart->cartItems as $item)
                             <li class="p-6 flex flex-col sm:flex-row items-center gap-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-300">
-                                <!-- Placeholder Image -->
-                                <div class="w-24 h-24 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-[1.25rem] flex-shrink-0 flex items-center justify-center text-primary-300 dark:text-primary-500 transition-colors duration-300">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                </div>
+                                <!-- Product Image -->
+                                <a href="{{ route('shop.show', $item->product->slug) }}" class="w-24 h-28 bg-primary-50 dark:bg-primary-900/30 border border-primary-100 dark:border-primary-800 rounded-[1.25rem] flex-shrink-0 flex items-center justify-center text-primary-300 dark:text-primary-500 overflow-hidden transition-colors duration-300">
+                                    @if($item->product->image)
+                                        <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->title }}" loading="lazy" class="h-full w-full object-cover">
+                                    @else
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    @endif
+                                </a>
                                 
                                 <div class="flex-grow text-center sm:text-right">
                                     <a href="{{ route('shop.show', $item->product->slug) }}" class="text-lg font-bold text-gray-800 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 mb-1 inline-block transition-colors duration-300">{{ $item->product->title }}</a>
-                                    <p class="text-gray-500 dark:text-gray-400 mb-3 text-sm font-medium transition-colors duration-300">{{ __('السعر:') }} {{ number_format($item->price, 2) }} $</p>
+                                    <p class="text-gray-500 dark:text-gray-400 mb-3 text-sm font-medium transition-colors duration-300">{{ __('السعر:') }} {{ number_format($item->price, 2) }} {{ $currencySymbol ?? '$' }}</p>
                                     <div class="flex items-center justify-center sm:justify-start gap-3">
                                         <form action="{{ route('cart.update', $item->id) }}" method="POST" class="flex items-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full pl-1 pr-3 py-1 shadow-sm transition-colors duration-300">
                                             @csrf
@@ -46,7 +51,7 @@
                                 </div>
                                 
                                 <div class="text-2xl font-black text-gray-900 dark:text-white text-center sm:text-left min-w-[100px] transition-colors duration-300">
-                                    {{ number_format($item->price * $item->quantity, 2) }} $
+                                    {{ number_format($item->price * $item->quantity, 2) }} {{ $currencySymbol ?? '$' }}
                                 </div>
                             </li>
                         @endforeach
@@ -61,16 +66,16 @@
                     
                     <div class="flex justify-between text-gray-600 dark:text-gray-400 mb-4 font-medium transition-colors duration-300">
                         <span>{{ __('المجموع الفرعي') }}</span>
-                        <span class="text-gray-900 dark:text-gray-100">{{ number_format($total, 2) }} $</span>
+                        <span class="text-gray-900 dark:text-gray-100 font-bold">{{ number_format($total, 2) }} {{ $currencySymbol ?? '$' }}</span>
                     </div>
                     <div class="flex justify-between text-gray-600 dark:text-gray-400 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700 font-medium transition-colors duration-300">
                         <span>{{ __('الضرائب (0%)') }}</span>
-                        <span class="text-gray-900 dark:text-gray-100">0.00 $</span>
+                        <span class="text-gray-900 dark:text-gray-100 font-bold">0.00 {{ $currencySymbol ?? '$' }}</span>
                     </div>
                     
                     <div class="flex justify-between text-2xl font-black text-gray-900 dark:text-white mb-8 transition-colors duration-300">
                         <span>{{ __('الإجمالي') }}</span>
-                        <span class="text-primary-600 dark:text-primary-400">{{ number_format($total, 2) }} $</span>
+                        <span class="text-primary-600 dark:text-primary-400">{{ number_format($total, 2) }} {{ $currencySymbol ?? '$' }}</span>
                     </div>
                     
                     <a href="{{ route('checkout.index') }}" class="block w-full text-center bg-primary-600 text-white font-bold py-4 rounded-full hover:bg-primary-700 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">

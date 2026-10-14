@@ -1,3 +1,233 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   Saja Design System
+   ========================================================================== */
+
+@layer base {
+    :root {
+        --header-h: 76px;
+        --ease-out: cubic-bezier(.2, .7, .2, 1);
+    }
+
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: calc(var(--header-h) + 16px);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        @apply bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300;
+        font-feature-settings: "kern", "liga";
+        text-rendering: optimizeLegibility;
+    }
+
+    h1, h2, h3, h4 {
+        @apply font-sans text-gray-900 dark:text-white;
+        letter-spacing: -0.01em;
+    }
+
+    ::selection {
+        @apply bg-primary-200 text-primary-950 dark:bg-primary-800 dark:text-white;
+    }
+
+    :focus-visible {
+        @apply outline-none ring-2 ring-primary-500/70 ring-offset-2 ring-offset-white dark:ring-offset-gray-950;
+    }
+
+    [x-cloak] { display: none !important; }
+
+    /* Slim, branded scrollbar */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: theme('colors.gray.300') transparent;
+    }
+    .dark * { scrollbar-color: theme('colors.gray.700') transparent; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-gray-300 dark:bg-gray-700;
+        border: 3px solid transparent;
+        background-clip: content-box;
+    }
+    ::-webkit-scrollbar-track { background: transparent; }
+}
+
+@layer components {
+    /* ---------- Layout ---------- */
+    .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+        @apply relative inline-flex select-none items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50;
+        transition-timing-function: var(--ease-out);
+    }
+    .btn-lg { @apply px-7 py-3.5 text-base; }
+    .btn-sm { @apply px-4 py-2 text-xs; }
+    .btn-primary {
+        @apply bg-primary-600 text-white shadow-glow hover:-translate-y-0.5 hover:bg-primary-700 active:translate-y-0;
+    }
+    .btn-dark {
+        @apply bg-gray-900 text-white hover:-translate-y-0.5 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100;
+    }
+    .btn-outline {
+        @apply border border-gray-200 bg-white text-gray-700 shadow-soft hover:-translate-y-0.5 hover:border-primary-300 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-primary-700 dark:hover:text-primary-300;
+    }
+    .btn-ghost {
+        @apply text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
+    }
+    .btn-icon {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
+    }
+
+    /* Ripple element injected by JS */
+    .ripple {
+        @apply pointer-events-none absolute rounded-full bg-white/40;
+        transform: scale(0);
+        animation: ripple .6s var(--ease-out) forwards;
+    }
+
+    /* ---------- Surfaces ---------- */
+    .card {
+        @apply rounded-3xl border border-gray-200/80 bg-white shadow-soft dark:border-gray-800 dark:bg-gray-900;
+    }
+    .card-hover {
+        @apply transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:shadow-lift dark:hover:border-gray-700;
+    }
+    .glass {
+        @apply border border-white/60 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-gray-900/60;
+    }
+
+    /* ---------- Forms ---------- */
+    .form-label { @apply mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300; }
+    .form-input {
+        @apply block w-full rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-gray-900 placeholder-gray-400 shadow-none transition-all duration-200 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/15 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:bg-gray-800;
+    }
+    .form-error { @apply mt-2 flex items-center gap-1 text-xs font-semibold text-red-500 dark:text-red-400; }
+
+    /* ---------- Typography helpers ---------- */
+    .eyebrow {
+        @apply inline-flex items-center gap-2 rounded-full border border-primary-200/70 bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 dark:border-primary-800/60 dark:bg-primary-950/50 dark:text-primary-300;
+    }
+    .section-title { @apply font-display text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl dark:text-white; }
+    .section-sub { @apply mt-3 max-w-2xl text-base leading-relaxed text-gray-500 dark:text-gray-400; }
+    .text-gradient {
+        @apply bg-gradient-to-l from-primary-600 via-primary-500 to-leaf-500 bg-clip-text text-transparent dark:from-primary-300 dark:via-primary-400 dark:to-leaf-400;
+    }
+
+    /* Animated underline link */
+    .link-underline {
+        @apply relative inline-block;
+        background: linear-gradient(currentColor, currentColor) no-repeat;
+        background-size: 0% 1.5px;
+        background-position: 100% 100%;
+        transition: background-size .35s var(--ease-out), color .2s;
+    }
+    .link-underline:hover { background-size: 100% 1.5px; background-position: 0 100%; }
+
+    /* "View all" arrow link */
+    .arrow-link { @apply inline-flex items-center gap-1.5 text-sm font-bold text-primary-700 transition-colors hover:text-primary-800 dark:text-primary-300 dark:hover:text-primary-200; }
+    .arrow-link svg { @apply transition-transform duration-300; }
+    .arrow-link:hover svg { transform: translateX(-4px); }
+    [dir="ltr"] .arrow-link svg { transform: scaleX(-1); }
+    [dir="ltr"] .arrow-link:hover svg { transform: scaleX(-1) translateX(-4px); }
+
+    /* ---------- Navigation ---------- */
+    .nav-link {
+        @apply relative rounded-full px-4 py-2 text-sm font-semibold text-gray-600 transition-colors duration-200 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white;
+    }
+    .nav-link::after {
+        content: "";
+        @apply absolute bottom-0.5 left-1/2 h-[3px] w-0 -translate-x-1/2 rounded-full bg-primary-500 transition-all duration-300;
+    }
+    .nav-link:hover::after { @apply w-4; }
+    .nav-link.is-active { @apply text-primary-700 dark:text-primary-300; }
+    .nav-link.is-active::after { @apply w-6; }
+
+    /* Header condensed state (toggled by JS) */
+    .site-header { transition: background-color .3s, box-shadow .3s, border-color .3s; }
+    .site-header.is-scrolled { @apply border-gray-200/80 bg-white/85 shadow-soft dark:border-gray-800 dark:bg-gray-950/80; }
+    .site-header .header-row { transition: height .3s var(--ease-out); }
+    .site-header.is-scrolled .header-row { height: 64px; }
+
+    /* ---------- Decorative backgrounds ---------- */
+    .bg-grid {
+        background-image:
+            linear-gradient(to right, rgb(15 23 42 / 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(15 23 42 / 0.05) 1px, transparent 1px);
+        background-size: 44px 44px;
+    }
+    .dark .bg-grid {
+        background-image:
+            linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    }
+    .mask-fade-b { mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%); }
+    .mask-fade-x { mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent); }
+
+    /* ---------- Product card tilt ---------- */
+    .tilt {
+        transform-style: preserve-3d;
+        transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+        transition: transform .5s var(--ease-out);
+        will-change: transform;
+    }
+    .tilt.is-tilting { transition: transform .08s linear; }
+    .tilt-glare {
+        @apply pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300;
+        background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / 0.55), transparent 55%);
+        mix-blend-mode: soft-light;
+    }
+    .tilt.is-tilting .tilt-glare { @apply opacity-100; }
+
+    /* Book cover spine highlight */
+    .book-cover { @apply relative overflow-hidden rounded-md shadow-book; }
+    .book-cover::before {
+        content: "";
+        @apply pointer-events-none absolute inset-y-0 z-10 w-3;
+        inset-inline-start: 0;
+        background: linear-gradient(to right, rgb(0 0 0 / 0.18), rgb(255 255 255 / 0.15) 40%, transparent);
+    }
+    [dir="rtl"] .book-cover::before {
+        background: linear-gradient(to left, rgb(0 0 0 / 0.18), rgb(255 255 255 / 0.15) 40%, transparent);
+    }
+
+    /* ---------- Prose for static pages ---------- */
+    .prose-saja { @apply space-y-5 text-[15.5px] leading-8 text-gray-600 dark:text-gray-300; }
+    .prose-saja h2 { @apply mt-10 flex items-center gap-3 text-xl font-bold text-gray-900 first:mt-0 dark:text-white; }
+    .prose-saja h2::before { content: ""; @apply h-6 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-primary-500 to-leaf-500; }
+    .prose-saja ul { @apply space-y-3; }
+    .prose-saja li { @apply relative ps-7; }
+    .prose-saja li::before {
+        content: "";
+        @apply absolute top-3 h-2 w-2 rounded-full bg-primary-500 ring-4 ring-primary-100 dark:ring-primary-900/60;
+        inset-inline-start: 0.25rem;
+    }
+}
+
+@layer utilities {
+    /* Scroll reveal (activated by JS; content stays visible without JS) */
+    .js [data-reveal] {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+        transition-delay: var(--reveal-delay, 0ms);
+    }
+    .js [data-reveal].is-visible { opacity: 1; transform: none; }
+
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+}
+
+@keyframes ripple { to { transform: scale(2.6); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+    .js [data-reveal] { opacity: 1; transform: none; }
+}

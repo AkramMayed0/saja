@@ -66,7 +66,7 @@
                         <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
                     </div>
                     <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 font-medium">أو</span>
+                        <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 font-medium">{{ __('أو') }}</span>
                     </div>
                 </div>
                 <div class="mt-4">

@@ -15,4 +15,9 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function bundles()
+    {
+        return $this->hasMany(Bundle::class);
+    }
 }

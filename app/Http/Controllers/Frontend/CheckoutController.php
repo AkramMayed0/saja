@@ -56,12 +56,18 @@ class CheckoutController extends Controller
             $request->phone
         ]);
 
+        $currencyService = app(\App\Services\CurrencyService::class);
+        $orderCurrency = $cart->currency ?: $currencyService->getUserCurrency();
+        $orderSymbol = $currencyService->getCurrencySymbol($orderCurrency);
+
         DB::beginTransaction();
         try {
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => 'pending',
                 'total_amount' => $total,
+                'currency' => $orderCurrency,
+                'currency_symbol' => $orderSymbol,
                 'shipping_address' => $shippingAddress,
                 'shipping_lat' => $request->shipping_lat,
                 'shipping_lng' => $request->shipping_lng,
@@ -73,6 +79,7 @@ class CheckoutController extends Controller
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
                     'price' => $item->price,
+                    'currency' => $orderCurrency,
                 ]);
             }
 

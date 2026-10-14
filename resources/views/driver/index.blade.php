@@ -28,7 +28,7 @@
                     </div>
                     
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2">
-                        <strong class="text-gray-700 dark:text-gray-300">{{ __('الهاتف:') }}</strong> {{ $order->user->phone ?? 'غير متوفر' }}
+                        <strong class="text-gray-700 dark:text-gray-300">{{ __('الهاتف:') }}</strong> {{ $order->user->phone ?? __('غير متوفر') }}
                     </p>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-2">
                         <strong class="text-gray-700 dark:text-gray-300">{{ __('العنوان:') }}</strong> {{ $order->shipping_address }}
@@ -98,12 +98,12 @@
 
     function startTracking(orderId) {
         if (!navigator.geolocation) {
-            alert('متصفحك لا يدعم خاصية تحديد الموقع.');
+            alert(@json(__('متصفحك لا يدعم خاصية تحديد الموقع.')));
             return;
         }
 
         const statusBadge = document.getElementById('tracking-status');
-        statusBadge.textContent = 'جاري التتبع الحي...';
+        statusBadge.textContent = @json(__('جاري التتبع الحي...'));
         statusBadge.classList.replace('bg-gray-100', 'bg-green-100');
         statusBadge.classList.replace('text-gray-600', 'text-green-600');
 
@@ -128,7 +128,7 @@
             },
             (error) => {
                 console.warn('Error getting location', error);
-                alert('فشل في الوصول لموقعك الحقيقي (قد يكون بسبب استخدام كمبيوتر مكتبي). سيتم تفعيل (وضع المحاكاة) لتجربة الخريطة!');
+                alert(@json(__('فشل في الوصول لموقعك الحقيقي (قد يكون بسبب استخدام كمبيوتر مكتبي). سيتم تفعيل (وضع المحاكاة) لتجربة الخريطة!')));
                 
                 // Simulation Mode for Desktop Testing (Sanaa Coordinates)
                 let simLat = 15.3483; 

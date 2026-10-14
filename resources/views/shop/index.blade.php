@@ -1,8 +1,9 @@
 @extends('layouts.store')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-colors duration-300">
-        <h2 class="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-8 tracking-tight transition-colors duration-300">{{ __('المتجر') }}</h2>
+    <x-page-header :title="__('باقات ومستويات المناهج')" :subtitle="__('تصفح باقات المناهج التعليمية المتكاملة مع كافة الملحقات والكتب والصوتيات.')" />
+    
+    <div class="container-x py-10">
         
         <!-- Search and Filters Container (Alpine.js) -->
         <div x-data="{ openFilters: false }" class="relative mb-10 z-30">
@@ -19,7 +20,7 @@
                     </div>
 
                     <!-- حقل الإدخال -->
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('ابحث عن كتاب، مؤلف، أو موضوع...') }}" class="flex-grow w-full bg-transparent border-0 border-transparent focus:border-transparent focus:ring-0 outline-none text-gray-700 dark:text-gray-200 text-sm sm:text-base placeholder-gray-400 dark:placeholder-gray-500 px-2 transition-colors duration-300" autocomplete="off">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('ابحث عن باقة، منهج تعليمي، أو مستوى...') }}" class="flex-grow w-full bg-transparent border-0 border-transparent focus:border-transparent focus:ring-0 outline-none text-gray-700 dark:text-gray-200 text-sm sm:text-base placeholder-gray-400 dark:placeholder-gray-500 px-2 transition-colors duration-300" autocomplete="off">
 
                     <!-- فاصل عمودي ناعم -->
                     <div class="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block transition-colors duration-300"></div>
@@ -45,17 +46,17 @@
                      x-cloak
                      class="absolute top-full right-0 sm:right-auto sm:left-0 mt-3 w-full sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden flex flex-col transition-colors duration-300">
                     
-                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 font-bold text-gray-800 dark:text-gray-100 text-lg transition-colors duration-300">{{ __('تصفية النتائج') }}</div>
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 font-bold text-gray-800 dark:text-gray-100 text-lg transition-colors duration-300">{{ __('تصفية الباقات') }}</div>
 
                     <div class="p-6 flex flex-col gap-6">
                         <!-- Categories Select -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('القسم') }}</label>
+                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('السلسلة التعليمية') }}</label>
                             <select name="category" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-colors duration-300">
-                                <option value="">{{ __('جميع الأقسام') }}</option>
+                                <option value="">{{ __('جميع السلاسل التعليمية') }}</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->slug }}" {{ request('category') == $category->slug ? 'selected' : '' }}>
-                                        {{ $category->name }}
+                                        {{ $category->name }} ({{ $category->bundles_count }})
                                     </option>
                                 @endforeach
                             </select>
@@ -63,7 +64,7 @@
 
                         <!-- Price Range -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('نطاق السعر ($)') }}</label>
+                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('نطاق السعر') }}</label>
                             <div class="flex items-center gap-3">
                                 <input type="number" name="min_price" value="{{ request('min_price') }}" min="0" placeholder="{{ __('الأدنى') }}" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-colors duration-300">
                                 <span class="text-gray-400 dark:text-gray-500 font-medium">-</span>
@@ -73,27 +74,14 @@
 
                         <!-- Level -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('المستوى') }}</label>
+                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('المستوى الدراسي') }}</label>
                             <select name="level" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-colors duration-300">
-                                <option value="">{{ __('الكل') }}</option>
+                                <option value="">{{ __('جميع المستويات') }}</option>
                                 @foreach($levels as $level)
                                     <option value="{{ $level }}" {{ request('level') == $level ? 'selected' : '' }}>
-                                        {{ $level }}
+                                        {{ __('المستوى') }} {{ $level }}
                                     </option>
                                 @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Book Type -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-300">{{ __('نوع الكتاب') }}</label>
-                            <select name="book_type" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-3 outline-none transition-colors duration-300">
-                                <option value="">{{ __('الكل') }}</option>
-                                <option value="student" {{ request('book_type') == 'student' ? 'selected' : '' }}>{{ __('كتاب الحصة') }}</option>
-                                <option value="workbook" {{ request('book_type') == 'workbook' ? 'selected' : '' }}>{{ __('كتاب التمارين') }}</option>
-                                <option value="combined" {{ request('book_type') == 'combined' ? 'selected' : '' }}>{{ __('كتاب حصة وتمارين') }}</option>
-                                <option value="teacher" {{ request('book_type') == 'teacher' ? 'selected' : '' }}>{{ __('دليل المعلم') }}</option>
-                                <option value="flashcard" {{ request('book_type') == 'flashcard' ? 'selected' : '' }}>{{ __('فلاش كارد') }}</option>
                             </select>
                         </div>
                     </div>
@@ -106,19 +94,13 @@
             </form>
         </div>
 
-        @if(request('search') || request('category') || request('min_price') || request('max_price') || request('level') || request('book_type'))
+        @if(request('search') || request('category') || request('min_price') || request('max_price') || request('level'))
             <div class="mb-6 flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-700 transition-colors duration-300">
                 <span class="text-gray-600 dark:text-gray-400 text-sm">
                     {{ __('نتائج البحث') }} 
                     @if(request('search')) {{ __('عن:') }} <strong class="text-gray-900 dark:text-white">"{{ request('search') }}"</strong> @endif
                     @if(request('category')) {{ __('في قسم:') }} <strong class="text-gray-900 dark:text-white">{{ $categories->where('slug', request('category'))->first()->name ?? request('category') }}</strong> @endif
                     @if(request('level')) {{ __('| المستوى:') }} <strong class="text-gray-900 dark:text-white">{{ request('level') }}</strong> @endif
-                    @if(request('book_type')) {{ __('| النوع:') }} <strong class="text-gray-900 dark:text-white">
-                        @php
-                            $types = ['student' => __('كتاب الحصة'), 'workbook' => __('كتاب التمارين'), 'combined' => __('كتاب حصة وتمارين'), 'teacher' => __('دليل المعلم'), 'flashcard' => __('فلاش كارد')];
-                            echo $types[request('book_type')] ?? request('book_type');
-                        @endphp
-                    </strong> @endif
                 </span>
                 <a href="{{ route('shop.index') }}" class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-sm font-medium flex items-center gap-1 transition-colors duration-300">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -127,13 +109,26 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
-            @foreach($products as $product)
-            <x-product-card :product="$product" />
-            @endforeach
-        </div>
-        <div class="mt-12 mb-10 flex justify-center">
-            {{ $products->links() }}
-        </div>
+        @if($bundles->count() > 0)
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+                @foreach($bundles as $bundle)
+                    <x-bundle-card :bundle="$bundle" />
+                @endforeach
+            </div>
+            <div class="mt-12 mb-10 flex justify-center">
+                {{ $bundles->links() }}
+            </div>
+        @else
+            <div class="py-20 text-center bg-white dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 my-8">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ __('لم يتم العثور على باقات تطابق البحث') }}</h3>
+                <p class="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto mb-6">{{ __('يرجى تجربة كلمات بحث أخرى أو تغيير معايير التصفية.') }}</p>
+                <a href="{{ route('shop.index') }}" class="btn btn-primary btn-sm inline-flex items-center gap-2">
+                    <span>{{ __('عرض جميع الباقات') }}</span>
+                </a>
+            </div>
+        @endif
     </div>
 @endsection
