@@ -81,6 +81,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
     Route::post('/customers/{user}/toggle-driver', [AdminController::class, 'toggleDriver'])->name('customers.toggle-driver');
     Route::resource('courses', AdminCourseController::class);
+    Route::get('/tools/webp-converter', [AdminController::class, 'webpConverter'])->name('tools.webp-converter');
 });
 
 // Driver

@@ -196,5 +196,10 @@ class AdminController extends Controller
 
         return back()->with('success', $message);
     }
+
+    public function webpConverter()
+    {
+        return view('admin.tools.webp-converter');
+    }
 }
 

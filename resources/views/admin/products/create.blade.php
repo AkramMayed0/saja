@@ -215,6 +215,7 @@
                     <input type="file" id="image" name="image" 
                            class="w-full text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 dark:file:bg-primary-950/60 dark:file:text-primary-300 hover:file:bg-primary-100 cursor-pointer" 
                            accept="image/*">
+                    <div id="imageCompressionStatus" class="mt-1"></div>
                     <p class="text-[11px] text-slate-400 mt-1">{{ __('يُفضل صورة عالية الدقة بنسبة أبعاد 3:4. يتم ضغطها وتحويلها إلى WebP تلقائياً.') }}</p>
                     @error('image')<p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p>@enderror
                 </div>
@@ -267,5 +268,80 @@
             formatSelect.value = 'ورقي';
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const productForm = document.querySelector('form');
+        if (productForm) {
+            productForm.addEventListener('submit', function() {
+                const btn = productForm.querySelector('button[type="submit"]');
+                if (btn && !btn.disabled) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>{{ __('جاري رفع ومعالجة الصورة...') }}</span>`;
+                }
+            });
+        }
+
+        const imageInput = document.getElementById('image');
+        const statusEl = document.getElementById('imageCompressionStatus');
+        if (imageInput) {
+            imageInput.addEventListener('change', async function(e) {
+                const file = e.target.files[0];
+                if (!file || !file.type.startsWith('image/')) return;
+                
+                if (file.type === 'image/webp' && file.size < 300 * 1024) return;
+
+                if (statusEl) {
+                    statusEl.innerHTML = `<span class="text-[11px] text-amber-500 font-bold flex items-center gap-1.5 animate-pulse">⚡ جاري تحسين وضغط الصورة إلى WebP داخل المتصفح...</span>`;
+                }
+
+                try {
+                    const blob = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (re) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                let w = img.width;
+                                let h = img.height;
+                                const maxW = 900;
+                                if (w > maxW) {
+                                    h = Math.round(h * (maxW / w));
+                                    w = maxW;
+                                }
+                                canvas.width = w;
+                                canvas.height = h;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, w, h);
+                                canvas.toBlob((b) => resolve(b), 'image/webp', 0.82);
+                            };
+                            img.src = re.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+
+                    if (blob) {
+                        const newFilename = file.name.replace(/\.[^.]+$/, '') + '.webp';
+                        const convertedFile = new File([blob], newFilename, { type: 'image/webp' });
+                        
+                        const dt = new DataTransfer();
+                        dt.items.add(convertedFile);
+                        imageInput.files = dt.files;
+
+                        const origKb = Math.round(file.size / 1024);
+                        const newKb = Math.round(convertedFile.size / 1024);
+                        const percent = Math.max(0, Math.round(((file.size - convertedFile.size) / file.size) * 100));
+
+                        if (statusEl) {
+                            statusEl.innerHTML = `<span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">✓ تم تحسين الصورة وضغطها إلى WebP تلقائياً (من ${origKb}KB إلى ${newKb}KB - وفرت ${percent}%)</span>`;
+                        }
+                    }
+                } catch (err) {
+                    console.error('WebP compression error:', err);
+                    if (statusEl) statusEl.innerHTML = '';
+                }
+            });
+        }
+    });
 </script>
 @endsection
