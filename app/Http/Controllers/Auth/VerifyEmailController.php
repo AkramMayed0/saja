@@ -14,14 +14,16 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
+        $redirectUrl = $request->user()->is_admin ? route('admin.dashboard') : route('home');
+
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+            return redirect()->intended($redirectUrl . '?verified=1')->with('success', __('البريد الإلكتروني مفعل مسبقاً!'));
         }
 
         if ($request->user()->markEmailAsVerified()) {
             event(new Verified($request->user()));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        return redirect()->intended($redirectUrl . '?verified=1')->with('success', __('تم تأكيد وتفعيل بريدك الإلكتروني بنجاح! مرحباً بك في متجر مؤسسة سجى.'));
     }
 }
