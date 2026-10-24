@@ -46,7 +46,7 @@ Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
 // Checkout & Reviews
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->middleware('throttle:10,1')->name('checkout.process');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
@@ -133,7 +133,15 @@ Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
         }
     }
 
-    return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n=== STORAGE LINK ===\n" . htmlspecialchars($storageStatus) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
+    // Auto-verify any unverified user accounts (so users aren't locked out of checkout)
+    try {
+        $verifiedCount = \App\Models\User::whereNull('email_verified_at')->update(['email_verified_at' => now()]);
+        $userStatus = "Auto-verified {$verifiedCount} user account(s).";
+    } catch (\Throwable $e) {
+        $userStatus = "User status: " . $e->getMessage();
+    }
+
+    return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n=== STORAGE LINK ===\n" . htmlspecialchars($storageStatus) . "\n\n=== USER VERIFICATION ===\n" . htmlspecialchars($userStatus) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
 });
 
 
