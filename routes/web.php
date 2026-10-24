@@ -97,21 +97,20 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 // Language switcher
 Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('lang.switch');
 
-// Local Development Simulator (For testing Auto Geo-Detection)
-if (app()->isLocal()) {
-    Route::get('/dev/simulate-country/{country}', function (string $country) {
-        $country = strtoupper($country);
-        $region = ($country === 'YE') ? 'YE' : 'GLOBAL';
-        $currency = ($region === 'YE') ? 'SAR' : 'USD';
-        
-        session([
-            'user_region' => $region,
-            'user_currency' => $currency,
-            'detected_country' => $country,
-        ]);
-        
-        return redirect()->route('shop.index')->with('success', "تمت محاكاة الدخول من [{$country}] — العملة النشطة: {$currency}");
-    });
-}
+// Deployment Artisan Runner (For environments like shared hosting without Terminal/SSH)
+Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
+    if ($request->query('secret') !== 'saja2026deploy') {
+        abort(403, 'Unauthorized deployment key.');
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $migration = \Illuminate\Support\Facades\Artisan::output();
+
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    $cache = \Illuminate\Support\Facades\Artisan::output();
+
+    return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
+});
+
 
 require __DIR__.'/auth.php';
