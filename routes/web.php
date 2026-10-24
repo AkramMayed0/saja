@@ -103,11 +103,19 @@ Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
         abort(403, 'Unauthorized deployment key.');
     }
 
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    $migration = \Illuminate\Support\Facades\Artisan::output();
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migration = \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Throwable $e) {
+        $migration = "ERROR RUNNING MIGRATIONS:\n" . $e->getMessage();
+    }
 
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    $cache = \Illuminate\Support\Facades\Artisan::output();
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $cache = \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Throwable $e) {
+        $cache = "ERROR CLEARING CACHE:\n" . $e->getMessage();
+    }
 
     return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
 });
