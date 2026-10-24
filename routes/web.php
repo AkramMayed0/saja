@@ -117,7 +117,22 @@ Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
         $cache = "ERROR CLEARING CACHE:\n" . $e->getMessage();
     }
 
-    return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
+    // Ensure public_html/storage symlink exists so images display properly
+    $storageStatus = 'Storage link already active.';
+    $publicHtmlStorage = dirname(base_path()) . '/public_html/storage';
+    $targetStorage = storage_path('app/public');
+
+    if (!file_exists($publicHtmlStorage)) {
+        if (@symlink($targetStorage, $publicHtmlStorage)) {
+            $storageStatus = "Created symlink: {$publicHtmlStorage} -> {$targetStorage}";
+        } else {
+            // Fallback via artisan
+            \Illuminate\Support\Facades\Artisan::call('storage:link');
+            $storageStatus = \Illuminate\Support\Facades\Artisan::output() ?: 'Attempted artisan storage:link';
+        }
+    }
+
+    return response("<pre style='background:#0f172a;color:#38bdf8;padding:24px;font-family:monospace;border-radius:8px;font-size:14px;line-height:1.6;'>=== MIGRATIONS ===\n" . htmlspecialchars($migration ?: 'Nothing to migrate.') . "\n\n=== OPTIMIZATION CLEAR ===\n" . htmlspecialchars($cache) . "\n\n=== STORAGE LINK ===\n" . htmlspecialchars($storageStatus) . "\n\n🚀 UPDATE DEPLOYED SUCCESSFULLY!</pre>");
 });
 
 
