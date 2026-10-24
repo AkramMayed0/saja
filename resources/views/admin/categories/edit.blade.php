@@ -26,6 +26,22 @@
         </div>
 
         <div class="mb-6">
+            <label for="parent_id" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ __('القسم الرئيسي (Parent Category)') }}</label>
+            <select id="parent_id" name="parent_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block w-full p-3 dark:bg-gray-900 dark:border-gray-700 dark:text-white font-medium">
+                <option value="">{{ __('بدون - هذا قسم رئيسي مستقل (Main Category)') }}</option>
+                @foreach($parentCategories as $parent)
+                    <option value="{{ $parent->id }}" {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
+                        📁 {{ $parent->name }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ __('اختر القسم الرئيسي إذا كان هذا قسماً فرعياً (سلسلة تعليمية)، أو اختر "بدون" لجعله قسماً رئيسياً.') }}</p>
+            @error('parent_id')
+                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="mb-6">
             <label for="image" class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">{{ __('صورة القسم (اختياري)') }}</label>
             @if($category->image)
                 <div class="mb-3">

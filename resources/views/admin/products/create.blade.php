@@ -44,9 +44,29 @@
                         <select id="category_id" name="category_id" 
                                 class="w-full text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 font-medium cursor-pointer" required>
                             <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>{{ __('-- اختر القسم الدراسي --') }}</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                            @endforeach
+                            @php
+                                $parentCats = $categories->whereNull('parent_id');
+                            @endphp
+                            @if($parentCats->isNotEmpty() && $categories->whereNotNull('parent_id')->isNotEmpty())
+                                @foreach($parentCats as $pCat)
+                                    @if($pCat->children && $pCat->children->isNotEmpty())
+                                        <optgroup label="📁 {{ $pCat->name }}">
+                                            @foreach($pCat->children as $child)
+                                                <option value="{{ $child->id }}" {{ old('category_id') == $child->id ? 'selected' : '' }}>{{ $child->name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @else
+                                        <option value="{{ $pCat->id }}" {{ old('category_id') == $pCat->id ? 'selected' : '' }}>{{ $pCat->name }}</option>
+                                    @endif
+                                @endforeach
+                                @foreach($categories->whereNotNull('parent_id')->whereNotIn('parent_id', $parentCats->pluck('id')) as $standalone)
+                                    <option value="{{ $standalone->id }}" {{ old('category_id') == $standalone->id ? 'selected' : '' }}>{{ $standalone->name }}</option>
+                                @endforeach
+                            @else
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         @error('category_id')<p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p>@enderror
                     </div>

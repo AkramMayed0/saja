@@ -36,7 +36,13 @@ class ProductController extends Controller
         }
 
         if ($request->filled('category_id') && $request->category_id !== 'all') {
-            $query->where('category_id', $request->category_id);
+            $catId = $request->category_id;
+            $query->where(function ($q) use ($catId) {
+                $q->where('category_id', $catId)
+                  ->orWhereHas('category', function ($cq) use ($catId) {
+                      $cq->where('parent_id', $catId);
+                  });
+            });
         }
 
         if ($request->filled('format') && $request->format !== 'all') {
@@ -60,14 +66,14 @@ class ProductController extends Controller
         }
 
         $products = $query->paginate(15)->withQueryString();
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::with('children')->orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
     }
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::with('children')->orderBy('name')->get();
         $bundles = Bundle::orderBy('name')->get();
         return view('admin.products.create', compact('categories', 'bundles'));
     }
@@ -130,7 +136,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = Category::all();
+        $categories = Category::with('children')->orderBy('name')->get();
         $bundles = Bundle::orderBy('name')->get();
         return view('admin.products.edit', compact('product', 'categories', 'bundles'));
     }

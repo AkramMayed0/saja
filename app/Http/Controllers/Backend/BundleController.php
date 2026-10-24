@@ -34,18 +34,24 @@ class BundleController extends Controller
         }
 
         if ($request->filled('category_id') && $request->category_id !== 'all') {
-            $query->where('category_id', $request->category_id);
+            $catId = $request->category_id;
+            $query->where(function ($q) use ($catId) {
+                $q->where('category_id', $catId)
+                  ->orWhereHas('category', function ($cq) use ($catId) {
+                      $cq->where('parent_id', $catId);
+                  });
+            });
         }
 
         $bundles = $query->paginate(15)->withQueryString();
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::with('children')->orderBy('name')->get();
 
         return view('admin.bundles.index', compact('bundles', 'categories'));
     }
 
     public function create()
     {
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::with('children')->orderBy('name')->get();
         $products = Product::with('category')->orderBy('category_id')->orderBy('level')->get();
 
         return view('admin.bundles.create', compact('categories', 'products'));
@@ -100,7 +106,7 @@ class BundleController extends Controller
     public function edit(Bundle $bundle)
     {
         $bundle->load('products');
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::with('children')->orderBy('name')->get();
         $products = Product::with('category')->orderBy('category_id')->orderBy('level')->get();
         $selectedProductIds = $bundle->products->pluck('id')->toArray();
 

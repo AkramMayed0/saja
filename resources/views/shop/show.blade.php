@@ -20,6 +20,16 @@
                     <a href="{{ route('shop.index') }}" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ __('المناهج') }}</a>
                 </li>
                 @if($category)
+                    @if($category->parent)
+                        <li><span class="mx-1.5 text-gray-300 dark:text-gray-700">/</span></li>
+                        <li>
+                            <a href="{{ route('shop.index', ['category' => $category->parent->slug]) }}" 
+                               title="{{ $category->parent->name }}"
+                               class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                                {{ Str::words($category->parent->name, 4, '...') }}
+                            </a>
+                        </li>
+                    @endif
                     <li><span class="mx-1.5 text-gray-300 dark:text-gray-700">/</span></li>
                     <li>
                         <a href="{{ route('shop.index', ['category' => $category->slug]) }}" 
@@ -65,24 +75,13 @@
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
 
                         @if($product->book_type_label)
-                            <span class="absolute top-3 start-3 px-3 py-1 rounded-full text-xs font-bold bg-white/90 dark:bg-gray-900/90 text-primary-700 dark:text-primary-300 shadow-sm backdrop-blur border border-white/40 dark:border-gray-700">
+                            <span class="absolute top-3 start-3 px-3 py-1 rounded-full text-xs font-medium bg-white/95 dark:bg-gray-900/95 shadow-sm backdrop-blur border border-gray-200/50 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                                 {{ $product->book_type_label }}
                             </span>
                         @endif
                     </div>
 
-                    <!-- Direct Sample PDF Download Button (If available) -->
-                    @if($product->sample_pdf)
-                        <div class="mt-4">
-                            <a href="{{ route('shop.sample', $product->slug) }}"
-                               class="btn btn-outline w-full rounded-2xl py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-soft hover:shadow-lift transition-all">
-                                <svg class="w-4 h-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                </svg>
-                                <span>{{ __('تحميل عينة من الكتاب (PDF)') }}</span>
-                            </a>
-                        </div>
-                    @endif
+
 
                     <!-- Trust & Delivery Highlights -->
                     <div class="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800/80 space-y-2.5 text-xs text-gray-500 dark:text-gray-400">
@@ -105,16 +104,28 @@
                 <div>
                     <!-- Badges Row -->
                     <div class="flex flex-wrap items-center gap-2 mb-3">
+                        @if($product->book_type_label)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                {{ $product->book_type_label }}
+                            </span>
+                        @endif
+
                         @if($product->category)
                             <a href="{{ route('shop.index', ['category' => $product->category->slug]) }}" 
-                               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200/60 dark:border-primary-800/60 hover:bg-primary-100 transition-colors">
+                               class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                                 {{ $product->category->name }}
                             </a>
                         @endif
 
                         @if($product->level)
-                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                 {{ __('المستوى:') }} {{ $product->level }}
+                            </span>
+                        @endif
+
+                        @if($product->age_suited)
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                {{ __('العمر:') }} {{ $product->age_suited }}
                             </span>
                         @endif
                     </div>
@@ -130,7 +141,7 @@
                     <a href="{{ route('bundles.show', $product->bundle->slug) }}" 
                        class="group rounded-2xl p-3 sm:px-4 sm:py-3 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/80 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm hover:border-gray-200 dark:hover:border-gray-700 transition-all flex items-center justify-between gap-3 cursor-pointer">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <svg class="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
                             <div class="min-w-0 text-xs sm:text-sm">
@@ -140,7 +151,7 @@
                                 </span>
                             </div>
                         </div>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border border-primary-200/60 dark:border-primary-800/60 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/60 group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-all shrink-0">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-all shrink-0">
                             <span>{{ __('عرض الباقة') }}</span>
                             <svg class="w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </span>
@@ -154,12 +165,24 @@
                             <span class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
                                 {{ __('سعر النسخة') }}
                             </span>
-                            <div class="flex items-baseline gap-2">
+                            <div class="flex items-baseline gap-3">
                                 <span class="font-display text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                                     {{ $product->formatted_price }}
                                 </span>
+                                @if($product->has_discount)
+                                    <span class="text-base text-gray-400 line-through font-bold">
+                                        {{ $product->formatted_original_price }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
+
+                        @if($product->has_discount)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>{{ __('خصم:') }} {{ __('وفّر') }} {{ $product->savings_percentage }}%</span>
+                            </span>
+                        @endif
                     </div>
 
                     <!-- Add to Cart Form -->
@@ -228,6 +251,35 @@
                             </strong>
                         </div>
 
+                        @if($product->pages_count)
+                            <div class="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-1">
+                                    {{ $product->isFlashcard() ? __('عدد البطاقات') : __('عدد الصفحات') }}
+                                </span>
+                                <strong class="text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-bold block">
+                                    {{ $product->pages_count }} {{ $product->isFlashcard() ? __('بطاقة') : __('صفحة') }}
+                                </strong>
+                            </div>
+                        @endif
+
+                        @if($product->dimensions)
+                            <div class="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-1">{{ __('المقاس / الأبعاد') }}</span>
+                                <strong class="text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-bold block" dir="ltr">
+                                    {{ $product->dimensions }}
+                                </strong>
+                            </div>
+                        @endif
+
+                        @if($product->age_suited)
+                            <div class="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-1">{{ __('الفئة العمرية') }}</span>
+                                <strong class="text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-bold block">
+                                    {{ $product->age_suited }}
+                                </strong>
+                            </div>
+                        @endif
+
                         <div class="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
                             <span class="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-1">{{ __('الصيغة') }}</span>
                             <strong class="text-gray-900 dark:text-gray-100 text-xs sm:text-sm font-bold block">
@@ -247,6 +299,11 @@
             </div>
         </div>
 
+        <!-- ============================== INTERACTIVE BOOK SAMPLE PREVIEW STRIP ============================== -->
+        @if($product->sample_pdf)
+            <x-book-sample-strip :product="$product" />
+        @endif
+
         <!-- ============================== RELATED ACCESSORIES / BOOKS ============================== -->
         @if($relatedAccessories->count() > 0)
             <div class="mt-16 pt-12 border-t border-gray-200/80 dark:border-gray-800">
@@ -261,7 +318,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                     @foreach($relatedAccessories as $related)
                         <x-product-card :product="$related" />
                     @endforeach

@@ -235,7 +235,10 @@ class CurrencyService
     public function getCurrencySymbol(?string $currency = null): string
     {
         $currency = $currency ?: $this->getUserCurrency();
-        return $currency === self::CURRENCY_USD ? '$' : 'ر.س';
+        if ($currency === self::CURRENCY_USD) {
+            return '$';
+        }
+        return app()->getLocale() === 'en' ? 'SAR' : 'ر.س';
     }
 
     /**
@@ -274,7 +277,8 @@ class CurrencyService
             return '$' . $formatted;
         }
 
-        return $formatted . ' ر.س';
+        $symbol = app()->getLocale() === 'en' ? 'SAR' : 'ر.س';
+        return app()->getLocale() === 'en' ? $symbol . ' ' . $formatted : $formatted . ' ' . $symbol;
     }
 
     /**

@@ -32,11 +32,29 @@
         <div class="w-full md:w-56">
             <select name="category_id" class="w-full text-xs py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary-500 font-medium cursor-pointer">
                 <option value="all">{{ __('كل الأقسام الدراسية') }}</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                    </option>
-                @endforeach
+                @php
+                    $parentCats = $categories->whereNull('parent_id');
+                @endphp
+                @if($parentCats->isNotEmpty() && $categories->whereNotNull('parent_id')->isNotEmpty())
+                    @foreach($parentCats as $pCat)
+                        <optgroup label="📁 {{ $pCat->name }}">
+                            <option value="{{ $pCat->id }}" {{ request('category_id') == $pCat->id ? 'selected' : '' }}>
+                                {{ __('★ كل') }} {{ $pCat->name }}
+                            </option>
+                            @foreach($pCat->children as $child)
+                                <option value="{{ $child->id }}" {{ request('category_id') == $child->id ? 'selected' : '' }}>
+                                    &nbsp;&nbsp;↳ {{ $child->name }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                @else
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
+                    @endforeach
+                @endif
             </select>
         </div>
 

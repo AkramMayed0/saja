@@ -20,25 +20,39 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories = Category::withCount('products')->latest()->paginate(15);
+        $categories = Category::with(['parent', 'children'])
+            ->withCount(['products', 'bundles'])
+            ->orderByRaw('COALESCE(parent_id, id) ASC')
+            ->orderByRaw('CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END ASC')
+            ->orderBy('id', 'asc')
+            ->paginate(20);
+
         return view('admin.categories.index', compact('categories'));
     }
 
     public function create()
     {
-        return view('admin.categories.create');
+        $parentCategories = Category::whereNull('parent_id')->orderBy('name')->get();
+        return view('admin.categories.create', compact('parentCategories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
+            'parent_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
         ]);
 
+        $slug = Str::slug($request->name);
+        if (empty($slug)) {
+            $slug = 'category-' . uniqid();
+        }
+
         $data = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => $slug,
+            'parent_id' => $request->filled('parent_id') ? $request->parent_id : null,
         ];
 
         if ($request->hasFile('image')) {
@@ -56,19 +70,31 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        return view('admin.categories.edit', compact('category'));
+        $parentCategories = Category::whereNull('parent_id')
+            ->where('id', '!=', $category->id)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.categories.edit', compact('category', 'parentCategories'));
     }
 
     public function update(Request $request, Category $category)
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,'.$category->id,
+            'parent_id' => 'nullable|exists:categories,id|not_in:'.$category->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240'
         ]);
 
+        $slug = Str::slug($request->name);
+        if (empty($slug)) {
+            $slug = $category->slug ?: 'category-' . $category->id;
+        }
+
         $data = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => $slug,
+            'parent_id' => $request->filled('parent_id') ? $request->parent_id : null,
         ];
 
         if ($request->hasFile('image')) {
@@ -89,8 +115,12 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->products()->count() > 0) {
-            return back()->with('error', __('لا يمكن حذف قسم يحتوي على منتجات.'));
+        if ($category->children()->count() > 0) {
+            return back()->with('error', __('لا يمكن حذف هذا القسم لأنه يحتوي على أقسام فرعية مرتبطة به.'));
+        }
+
+        if ($category->products()->count() > 0 || $category->bundles()->count() > 0) {
+            return back()->with('error', __('لا يمكن حذف قسم يحتوي على منتجات أو باقات.'));
         }
         
         if ($category->image && Storage::disk('public')->exists($category->image)) {

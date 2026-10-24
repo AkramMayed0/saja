@@ -11,7 +11,14 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $categories = Category::withCount('products')->get();
+        $categories = Category::whereNull('parent_id')
+            ->with(['children' => fn($q) => $q->withCount(['products', 'bundles'])])
+            ->withCount(['products', 'bundles'])
+            ->get();
+
+        if ($categories->isEmpty()) {
+            $categories = Category::withCount(['products', 'bundles'])->get();
+        }
         
         // جلب أحدث 4 منتجات
         $newProducts = \App\Models\Product::with('category')->latest()->take(4)->get();

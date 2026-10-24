@@ -8,72 +8,177 @@ use Illuminate\Http\Request;
 use App\Models\Bundle;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Bundle::active()->with(['category', 'products']);
+        $currencyService = app(\App\Services\CurrencyService::class);
+        $priceColumn = $currencyService->isYemen() ? 'price_sar' : 'price_usd';
+        $categorySlug = $request->category;
+        $selectedCategory = $categorySlug ? Category::where('slug', $categorySlug)->with('parent', 'children')->first() : null;
 
+        // 1. Build Bundles query
+        $bundlesQuery = Bundle::active()->with(['category.parent', 'products']);
+
+        // 2. Build Products (Books) query
+        $productsQuery = Product::with(['category.parent', 'bundle']);
+
+        // Common search filter
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
+            $bundlesQuery->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', '%' . $searchTerm . '%')
                   ->orWhere('description', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
-                      $catQ->where('name', 'like', '%' . $searchTerm . '%');
-                  })
-                  ->orWhereHas('products', function ($prodQ) use ($searchTerm) {
-                      $prodQ->where('title', 'like', '%' . $searchTerm . '%');
-                  });
+                  ->orWhereHas('category', fn($cq) => $cq->where('name', 'like', '%' . $searchTerm . '%'))
+                  ->orWhereHas('products', fn($pq) => $pq->where('title', 'like', '%' . $searchTerm . '%'));
+            });
+
+            $productsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('sku', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('category', fn($cq) => $cq->where('name', 'like', '%' . $searchTerm . '%'));
             });
         }
 
-        if ($request->filled('category')) {
-            $categorySlug = $request->category;
-            $query->whereHas('category', function ($q) use ($categorySlug) {
-                $q->where('slug', $categorySlug);
+        // Common category filter
+        if ($categorySlug) {
+            $bundlesQuery->whereHas('category', function ($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug)
+                  ->orWhereHas('parent', fn($pq) => $pq->where('slug', $categorySlug));
+            });
+
+            $productsQuery->whereHas('category', function ($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug)
+                  ->orWhereHas('parent', fn($pq) => $pq->where('slug', $categorySlug));
             });
         }
 
+        // Common level filter
         if ($request->filled('level')) {
-            $query->where('level', $request->level);
+            $bundlesQuery->where('level', $request->level);
+            $productsQuery->where('level', $request->level);
         }
 
-        $priceColumn = app(\App\Services\CurrencyService::class)->isYemen() ? 'price_sar' : 'price_usd';
-
+        // Common price filter
         if ($request->filled('min_price')) {
-            $query->where(function ($q) use ($priceColumn, $request) {
-                $q->where($priceColumn, '>=', $request->min_price)
-                  ->orWhereNull($priceColumn);
+            $minPrice = (float) $request->min_price;
+            $bundlesQuery->where(function ($q) use ($priceColumn, $minPrice) {
+                $q->where($priceColumn, '>=', $minPrice)->orWhereNull($priceColumn);
+            });
+            $productsQuery->where(function ($q) use ($priceColumn, $minPrice) {
+                $q->where($priceColumn, '>=', $minPrice)->orWhere('price', '>=', $minPrice);
             });
         }
 
         if ($request->filled('max_price')) {
-            $query->where(function ($q) use ($priceColumn, $request) {
-                $q->where($priceColumn, '<=', $request->max_price)
-                  ->orWhereNull($priceColumn);
+            $maxPrice = (float) $request->max_price;
+            $bundlesQuery->where(function ($q) use ($priceColumn, $maxPrice) {
+                $q->where($priceColumn, '<=', $maxPrice)->orWhereNull($priceColumn);
+            });
+            $productsQuery->where(function ($q) use ($priceColumn, $maxPrice) {
+                $q->where($priceColumn, '<=', $maxPrice)->orWhere('price', '<=', $maxPrice);
             });
         }
 
-        if ($request->get('sort') === 'newest') {
-            $query->latest();
+        // 1. Fetch matching bundles
+        $bundlesCollection = $bundlesQuery->get();
+
+        // 2. Fetch matching standalone products (e.g. Computer Science books, Ashbal KG, etc.)
+        if ($selectedCategory && $bundlesCollection->isEmpty()) {
+            $productsCollection = $productsQuery->get();
+        } elseif ($request->filled('search')) {
+            $productsCollection = $productsQuery->get();
         } else {
-            $query->orderBy('category_id', 'asc')
-                  ->orderBy('level', 'asc');
+            // General catalog: include standalone textbooks not duplicated inside bundles
+            $productsCollection = $productsQuery->whereNull('bundle_id')->get();
         }
 
-        $bundles = $query->paginate(12)->withQueryString();
-        $categories = Category::withCount(['bundles' => fn($q) => $q->active()])->get();
+        // 3. Merge into unified catalog collection
+        $mergedItems = $bundlesCollection->concat($productsCollection);
 
-        // Get distinct levels for the filter dropdown
-        $levels = Bundle::active()->whereNotNull('level')
-            ->where('level', '!=', '')
-            ->distinct()
-            ->orderBy('level', 'asc')
-            ->pluck('level');
+        // 4. Sort collection
+        $sortOption = $request->get('sort');
+        $mergedItems = $mergedItems->sort(function ($a, $b) use ($sortOption) {
+            if ($sortOption === 'newest') {
+                return $b->created_at <=> $a->created_at;
+            }
+            if ($sortOption === 'price_asc') {
+                return ($a->current_price ?? 0) <=> ($b->current_price ?? 0);
+            }
+            if ($sortOption === 'price_desc') {
+                return ($b->current_price ?? 0) <=> ($a->current_price ?? 0);
+            }
 
-        return view('shop.index', compact('bundles', 'categories', 'levels'));
+            // Default hierarchy:
+            // 1. Category ID
+            $catA = $a->category_id ?? 999;
+            $catB = $b->category_id ?? 999;
+            if ($catA !== $catB) {
+                return $catA <=> $catB;
+            }
+
+            // 2. Level
+            $levelA = (int)($a->level ?? 0);
+            $levelB = (int)($b->level ?? 0);
+            if ($levelA !== $levelB) {
+                return $levelA <=> $levelB;
+            }
+
+            // 3. Student bundle before teacher bundle
+            if ($a instanceof Bundle && $b instanceof Bundle) {
+                return ($a->isStudentBundle() ? 0 : 1) <=> ($b->isStudentBundle() ? 0 : 1);
+            }
+
+            return 0;
+        })->values();
+
+        // 5. Paginate unified collection
+        $perPage = 12;
+        $currentPage = max(1, (int) $request->input('page', 1));
+        $currentSlice = $mergedItems->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $items = new LengthAwarePaginator(
+            $currentSlice,
+            $mergedItems->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        // For full compatibility with views/tests
+        $bundles = $items;
+        $products = $items;
+        $viewMode = 'unified';
+        $totalBundlesMatching = $bundlesCollection->count();
+        $totalProductsMatching = $productsCollection->count();
+
+        // Categories for filter dropdown
+        $categories = Category::with(['children' => fn($q) => $q->withCount(['bundles' => fn($bq) => $bq->active(), 'products'])])
+            ->withCount(['bundles' => fn($q) => $q->active(), 'products'])
+            ->get();
+
+        // Distinct levels across both bundles and products
+        $bundleLevels = Bundle::active()->whereNotNull('level')->where('level', '!=', '')->pluck('level');
+        $productLevels = Product::whereNotNull('level')->where('level', '!=', '')->pluck('level');
+        $levels = $bundleLevels->merge($productLevels)->unique()->sort()->values();
+
+        return view('shop.index', compact(
+            'items',
+            'bundles',
+            'products',
+            'viewMode',
+            'totalBundlesMatching',
+            'totalProductsMatching',
+            'selectedCategory',
+            'categories',
+            'levels'
+        ));
     }
 
     public function showBundle(Bundle $bundle)

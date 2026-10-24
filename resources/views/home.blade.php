@@ -137,38 +137,133 @@
         </a>
     </div>
 
-    <div data-reveal-group class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div data-reveal-group class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
         @forelse($categories as $category)
-            <a data-reveal href="{{ route('shop.index', ['category' => $category->slug]) }}" class="card card-hover group relative flex flex-row items-center gap-4 overflow-hidden p-4 sm:flex-col sm:items-stretch sm:gap-5 sm:p-6">
-                <div class="absolute -end-10 -top-10 h-32 w-32 rounded-full bg-primary-500/0 blur-2xl transition-all duration-500 group-hover:bg-primary-500/20" aria-hidden="true"></div>
-                @if($category->image)
-                    <img src="{{ asset('storage/'.$category->image) }}" alt="" class="h-12 w-12 shrink-0 object-contain sm:h-14 sm:w-14 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6">
-                @else
-                    <span class="flex h-12 w-12 shrink-0 items-center sm:h-14 sm:w-14 justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-leaf-500 font-display text-xl font-black text-white shadow-glow transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6">{{ mb_substr($category->name, 0, 1) }}</span>
-                @endif
-                <div class="grid min-w-0 flex-1 grid-cols-[1fr_auto] items-center gap-x-2 sm:grid-rows-[1fr_auto] sm:gap-y-3">
-                    <h3 class="col-start-1 font-display text-base font-bold leading-snug text-gray-900 dark:text-white sm:col-span-2 sm:self-center sm:text-lg">{{ $category->name }}</h3>
-                    <p class="col-start-1 mt-1 text-xs font-medium text-gray-500 dark:text-gray-400 sm:mt-0 sm:self-center">{{ $category->products_count }} {{ __('منتج') }}</p>
-                    <span class="col-start-2 row-span-2 row-start-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-all duration-300 group-hover:border-primary-600 group-hover:bg-primary-600 group-hover:text-white dark:border-gray-700 sm:row-span-1 sm:row-start-2">
-                        <svg class="h-4 w-4 ltr:-scale-x-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                    </span>
+            @php
+                $isEnglish = \Illuminate\Support\Str::contains($category->slug, ['english', 'injiliz']) || \Illuminate\Support\Str::contains($category->name, ['الإنجليزية', 'انجليزي', 'English']);
+                $isTech = \Illuminate\Support\Str::contains($category->slug, ['hawsabah', 'tech', 'computer']) || \Illuminate\Support\Str::contains($category->name, ['الحوسبة', 'حاسوب', 'التقنية']);
+                $isKg = \Illuminate\Support\Str::contains($category->slug, ['riyad', 'atfal', 'ashbal', 'kindergarten']) || \Illuminate\Support\Str::contains($category->name, ['رياض', 'أطفال', 'اشبال', 'تمهيدي']);
+
+                if ($isEnglish) {
+                    $iconBg = 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50';
+                    $pillBg = 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300';
+                    $hoverBorder = 'hover:border-blue-500/50 hover:shadow-blue-500/5';
+                } elseif ($isTech) {
+                    $iconBg = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50';
+                    $pillBg = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300';
+                    $hoverBorder = 'hover:border-emerald-500/50 hover:shadow-emerald-500/5';
+                } elseif ($isKg) {
+                    $iconBg = 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50';
+                    $pillBg = 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300';
+                    $hoverBorder = 'hover:border-amber-500/50 hover:shadow-amber-500/5';
+                } else {
+                    $iconBg = 'bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50';
+                    $pillBg = 'bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300';
+                    $hoverBorder = 'hover:border-primary-500/50 hover:shadow-primary-500/5';
+                }
+            @endphp
+
+            <div data-reveal
+                 class="group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200/90 dark:border-gray-800 shadow-xs hover:shadow-xl {{ $hoverBorder }} transition-all duration-300 hover:-translate-y-1">
+                <div>
+                    <!-- Top: Icon & Counter Badge -->
+                    <div class="flex items-center justify-between mb-5">
+                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl {{ $iconBg }} transition-transform duration-300 group-hover:scale-110">
+                            @if($category->image)
+                                <img src="{{ asset('storage/'.$category->image) }}" alt="" class="h-7 w-7 object-contain">
+                            @elseif($isEnglish)
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+                            @elseif($isTech)
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3"/></svg>
+                            @elseif($isKg)
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+                            @else
+                                <span class="font-display text-lg font-black">{{ mb_substr($category->name, 0, 1) }}</span>
+                            @endif
+                        </span>
+
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $pillBg }}">
+                            @if($category->total_bundles_count > 0)
+                                {{ $category->total_bundles_count }} {{ __('باقة') }}
+                            @else
+                                {{ $category->total_products_count }} {{ __('كتاب') }}
+                            @endif
+                        </span>
+                    </div>
+
+                    <!-- Category Title (Clickable) -->
+                    <a href="{{ route('shop.index', ['category' => $category->slug]) }}" 
+                       class="font-display text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-snug hover:text-primary-600 dark:hover:text-primary-400 transition-colors block">
+                        {{ $category->name }}
+                    </a>
+
+                    <!-- Subcategory Interactive Chips / Pills (Clean stroked outline) -->
+                    @if($category->children && $category->children->count())
+                        <div class="mt-4 flex flex-wrap gap-1.5">
+                            @foreach($category->children as $child)
+                                @php
+                                    $cleanName = preg_replace('/^سلسلة\s+/u', '', $child->name);
+                                    if (app()->getLocale() === 'en') {
+                                        $cleanName = preg_replace('/^(Series\s+|سلسلة\s+)/ui', '', $cleanName);
+                                        $cleanName = preg_replace('/\s+Series$/ui', '', $cleanName);
+                                    }
+                                @endphp
+                                <a href="{{ route('shop.index', ['category' => $child->slug]) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 border border-gray-200 dark:border-gray-800 hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
+                                   title="{{ $child->name }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
+                                    <span>{{ $cleanName }}</span>
+                                    <span class="text-[11px] text-gray-400 dark:text-gray-500">({{ $child->products_count }})</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
-            </a>
+
+                <!-- Bottom: Product count & Arrow -->
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="font-bold text-gray-600 dark:text-gray-400">
+                        {{ $category->total_products_count }} {{ __('منتج وكتاب') }}
+                    </span>
+                    <a href="{{ route('shop.index', ['category' => $category->slug]) }}" 
+                       class="inline-flex items-center gap-1 font-bold text-primary-600 dark:text-primary-400 transition-transform duration-300 group-hover:-translate-x-1 ltr:group-hover:translate-x-1">
+                        <span>{{ __('تصفح') }}</span>
+                        <svg class="h-3.5 w-3.5 ltr:-scale-x-100" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                    </a>
+                </div>
+            </div>
         @empty
             <p class="col-span-full text-center text-gray-500 dark:text-gray-400">{{ __('لا توجد أقسام متاحة حالياً.') }}</p>
         @endforelse
 
         @if($categories->count())
-            <a data-reveal href="{{ route('shop.index') }}" class="group relative flex flex-row items-center gap-4 overflow-hidden rounded-3xl bg-gray-900 p-4 text-white sm:flex-col sm:items-stretch sm:justify-between sm:gap-5 sm:p-6 sm:min-h-[11rem] shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift dark:bg-primary-900">
-                <div class="absolute inset-0 bg-grid opacity-20" aria-hidden="true"></div>
-                <span class="relative flex h-12 w-12 shrink-0 items-center sm:h-14 sm:w-14 justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
-                </span>
-                <div class="relative grid min-w-0 flex-1 grid-cols-[1fr_auto] items-center gap-x-2 sm:grid-rows-[1fr_auto] sm:gap-y-3">
-                    <h3 class="col-start-1 font-display text-base font-bold text-white sm:col-span-2 sm:self-center sm:text-lg">{{ __('جميع المنتجات') }}</h3>
-                    <p class="col-start-1 mt-1 text-xs text-white/60 sm:mt-0 sm:self-center">{{ $productsCount }} {{ __('منتج') }}</p>
-                    <span class="col-start-2 row-span-2 row-start-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 transition-transform duration-300 group-hover:-translate-x-1 ltr:group-hover:translate-x-1 sm:row-span-1 sm:row-start-2">
-                        <svg class="h-4 w-4 ltr:-scale-x-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+            <a data-reveal href="{{ route('shop.index') }}" 
+               class="group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200/90 dark:border-gray-800 shadow-xs hover:shadow-xl hover:border-primary-500/50 hover:shadow-primary-500/5 transition-all duration-300 hover:-translate-y-1">
+                <div>
+                    <!-- Top: Icon & Counter Badge -->
+                    <div class="flex items-center justify-between mb-5">
+                        <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 transition-transform duration-300 group-hover:scale-110">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                        </span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300">
+                            {{ __('المتجر الكامل') }}
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="font-display text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        {{ __('جميع المناهج والكتب') }}
+                    </h3>
+                </div>
+
+                <!-- Bottom: Product count & Arrow -->
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between text-xs">
+                    <span class="font-bold text-gray-600 dark:text-gray-400">
+                        {{ $productsCount }} {{ __('منتج متوفر') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 font-bold text-primary-600 dark:text-primary-400 transition-transform duration-300 group-hover:-translate-x-1 ltr:group-hover:translate-x-1">
+                        <span>{{ __('عرض الكل') }}</span>
+                        <svg class="h-3.5 w-3.5 ltr:-scale-x-100" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
                     </span>
                 </div>
             </a>
@@ -192,7 +287,7 @@
         </a>
     </div>
 
-    <div data-reveal-group class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div data-reveal-group class="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
         @foreach($trendingProducts as $product)
             <x-product-card :product="$product" />
         @endforeach
@@ -246,7 +341,7 @@
         </a>
     </div>
 
-    <div data-reveal-group class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div data-reveal-group class="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
         @foreach($newProducts as $product)
             <x-product-card :product="$product" />
         @endforeach

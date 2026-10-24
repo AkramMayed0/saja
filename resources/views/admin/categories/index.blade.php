@@ -21,21 +21,54 @@
                 <tr class="text-slate-400 dark:text-slate-500 text-xs border-b border-slate-100 dark:border-slate-800">
                     <th class="pb-3 font-semibold">{{ __('الرقم') }}</th>
                     <th class="pb-3 font-semibold">{{ __('اسم القسم') }}</th>
+                    <th class="pb-3 font-semibold">{{ __('نوع القسم / التبعية') }}</th>
                     <th class="pb-3 font-semibold">{{ __('الرابط الدائم (Slug)') }}</th>
-                    <th class="pb-3 font-semibold text-center">{{ __('عدد المنتجات') }}</th>
+                    <th class="pb-3 font-semibold text-center">{{ __('المحتوى') }}</th>
                     <th class="pb-3 font-semibold text-center">{{ __('إجراءات') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 @forelse($categories as $category)
-                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors {{ $category->is_parent ? 'bg-slate-50/40 dark:bg-slate-900/40' : '' }}">
                         <td class="py-3.5 text-slate-400 text-xs font-mono">#{{ $category->id }}</td>
-                        <td class="py-3.5 font-bold text-slate-900 dark:text-white">{{ $category->name }}</td>
+                        <td class="py-3.5 font-bold text-slate-900 dark:text-white">
+                            <div class="flex items-center gap-2 {{ $category->is_parent ? '' : 'ps-5' }}">
+                                @if($category->is_parent)
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300 text-xs font-bold shadow-xs">📁</span>
+                                @else
+                                    <span class="text-slate-400 font-mono text-sm">↳</span>
+                                @endif
+                                <span>{{ $category->name }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3.5">
+                            @if($category->is_parent)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200/70 dark:border-primary-800/60">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
+                                    {{ __('قسم رئيسي') }} ({{ $category->children->count() }} {{ __('سلاسل') }})
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+                                    <span class="text-slate-400">{{ __('تابع لـ:') }}</span>
+                                    <strong class="font-bold text-slate-800 dark:text-slate-200">{{ $category->parent->name ?? '-' }}</strong>
+                                </span>
+                            @endif
+                        </td>
                         <td class="py-3.5 text-slate-500 dark:text-slate-400 text-xs font-mono" dir="ltr">{{ $category->slug }}</td>
                         <td class="py-3.5 text-center">
-                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                {{ $category->products_count }}
-                            </span>
+                            @if($category->is_parent)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                    <span>{{ $category->total_products_count }} {{ __('منتج') }}</span>
+                                    <span class="text-slate-300 dark:text-slate-600">•</span>
+                                    <span>{{ $category->total_bundles_count }} {{ __('باقة') }}</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                    <span>{{ $category->products_count }} {{ __('منتج') }}</span>
+                                    <span class="text-slate-300 dark:text-slate-600">•</span>
+                                    <span>{{ $category->bundles_count }} {{ __('باقة') }}</span>
+                                </span>
+                            @endif
                         </td>
                         <td class="py-3.5 text-center">
                             <div class="inline-flex items-center gap-1.5">
@@ -54,7 +87,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="py-12 text-center text-slate-400 text-xs">{{ __('لا توجد أقسام مسجلة بعد.') }}</td>
+                        <td colspan="6" class="py-12 text-center text-slate-400 text-xs">{{ __('لا توجد أقسام مسجلة بعد.') }}</td>
                     </tr>
                 @endforelse
             </tbody>
