@@ -128,6 +128,64 @@ function initParallax() {
     });
 }
 
+/* 5. Rotate the home page's featured book covers ------------------------- */
+function initHeroBookRotation() {
+    if (prefersReducedMotion) return;
+
+    const scene = document.querySelector('[data-home-book-rotator]');
+    if (!scene) return;
+
+    const imageElements = Array.from(scene.querySelectorAll('[data-home-book-slot]'));
+    const bookImages = [...new Set(JSON.parse(scene.dataset.bookImages || '[]'))];
+    if (imageElements.length < 3 || bookImages.length < 3) return;
+
+    const shuffle = (items) => {
+        const result = [...items];
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    };
+
+    let rotation = 0;
+    const rotateBooks = () => {
+        if (document.hidden) return;
+
+        const currentRotation = ++rotation;
+        const currentImages = imageElements.map((image) => image.src);
+        let nextImages;
+        for (let attempt = 0; attempt < 10; attempt++) {
+            nextImages = shuffle(bookImages).slice(0, imageElements.length);
+            if (nextImages.every((src, index) => src !== currentImages[index])) break;
+        }
+
+        if (!nextImages.every((src, index) => src !== currentImages[index])) {
+            nextImages = [currentImages[1], currentImages[2], currentImages[0]];
+        }
+
+        nextImages.forEach((src, index) => {
+            if (src === currentImages[index]) return;
+
+            const preload = new Image();
+            preload.onload = () => {
+                if (currentRotation !== rotation) return;
+
+                const image = imageElements[index];
+                image.classList.add('opacity-0');
+                window.setTimeout(() => {
+                    image.src = src;
+                    image.classList.remove('opacity-0');
+                }, 150);
+            };
+            preload.onerror = () => console.error(`Unable to load home hero book cover: ${src}`);
+            preload.src = src;
+        });
+    };
+
+    window.setInterval(rotateBooks, 5000);
+}
+
 /* 5. Click ripple on buttons --------------------------------------------- */
 function initRipple() {
     if (prefersReducedMotion) return;
@@ -199,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeader();
     initTilt();
     initParallax();
+    initHeroBookRotation();
     initRipple();
     initCountUp();
     initAddToCart();

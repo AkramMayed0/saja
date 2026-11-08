@@ -29,6 +29,39 @@ class BugfixesVerificationTest extends TestCase
         $this->assertTrue(Schema::hasColumn('products', 'sample_pdf'));
     }
 
+    public function test_sample_preview_serves_the_pdf_inline_from_public_storage(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('samples/sample.pdf', '%PDF-1.4 sample');
+
+        $category = Category::create([
+            'name' => 'English Gate',
+            'slug' => 'english-gate',
+        ]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'title' => 'English Gate Pupil Book 1',
+            'slug' => 'english-gate-pupil-book-1',
+            'description' => 'Sample product',
+            'sample_pdf' => 'samples/sample.pdf',
+        ]);
+
+        $page = $this->get(route('shop.show', $product->slug));
+        $page->assertOk();
+        $page->assertSee('shop\\/english-gate-pupil-book-1\\/sample\\/preview', false);
+        $page->assertDontSee('تحميل العينة (PDF)');
+        $page->assertDontSee('تحميل النسخة كملف PDF');
+
+        $response = $this->get(route('shop.sample.preview', $product->slug));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->assertStringStartsWith('inline;', $response->headers->get('Content-Disposition'));
+
+        $this->get('/shop/' . $product->slug . '/sample')->assertNotFound();
+    }
+
     /**
      * 2. Test inactive bundles are hidden from storefront
      */

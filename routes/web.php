@@ -24,7 +24,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/bundle/{bundle:slug}', [ShopController::class, 'showBundle'])->name('bundles.show');
 Route::get('/shop/{product:slug}', [ShopController::class, 'show'])->name('shop.show');
-Route::get('/shop/{product:slug}/sample', [ShopController::class, 'downloadSample'])->name('shop.sample');
+Route::get('/shop/{product:slug}/sample/preview', [ShopController::class, 'previewSample'])->name('shop.sample.preview');
 
 // Static Pages
 Route::get('/privacy', [PageController::class, 'privacy'])->name('pages.privacy');
@@ -100,7 +100,14 @@ Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('lang.sw
 
 // Deployment Artisan Runner (For environments like shared hosting without Terminal/SSH)
 Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
-    if ($request->query('secret') !== 'saja2026deploy') {
+    $deploySecret = (string) config('services.deploy.secret');
+
+    // Disabled entirely unless DEPLOY_SECRET is set in .env
+    if ($deploySecret === '') {
+        abort(404);
+    }
+
+    if (! hash_equals($deploySecret, (string) $request->query('secret'))) {
         abort(403, 'Unauthorized deployment key.');
     }
 
@@ -118,20 +125,9 @@ Route::get('/deploy-artisan', function (\Illuminate\Http\Request $request) {
         $cache = "ERROR CLEARING CACHE:\n" . $e->getMessage();
     }
 
-    // Ensure public_html/storage symlink exists so images display properly
-    $storageStatus = 'Storage link already active.';
-    $publicHtmlStorage = dirname(base_path()) . '/public_html/storage';
-    $targetStorage = storage_path('app/public');
-
-    if (!file_exists($publicHtmlStorage)) {
-        if (@symlink($targetStorage, $publicHtmlStorage)) {
-            $storageStatus = "Created symlink: {$publicHtmlStorage} -> {$targetStorage}";
-        } else {
-            // Fallback via artisan
-            \Illuminate\Support\Facades\Artisan::call('storage:link');
-            $storageStatus = \Illuminate\Support\Facades\Artisan::output() ?: 'Attempted artisan storage:link';
-        }
-    }
+    // Uploads are written straight to the public disk root (public_html/storage on Hostinger), no symlink needed
+    $publicRoot = config('filesystems.disks.public.root');
+    $storageStatus = "Public disk root: {$publicRoot} (" . (is_dir($publicRoot) && is_writable($publicRoot) ? 'writable' : 'NOT writable') . ')';
 
     $mailStatus = 'Default Mailer: ' . config('mail.default') . ' (Host: ' . config('mail.mailers.smtp.host') . ')';
 

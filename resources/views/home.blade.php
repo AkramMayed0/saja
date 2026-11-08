@@ -1,10 +1,6 @@
 @extends('layouts.store')
 
 @section('content')
-@php
-    $heroBooks = $newProducts->merge($trendingProducts)->filter(fn ($p) => $p->image)->unique('id')->take(3)->values();
-@endphp
-
 <!-- ============================== HERO ============================== -->
 <section class="relative overflow-hidden">
     <!-- Background decoration -->
@@ -31,7 +27,7 @@
                     <svg class="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1 ltr:-scale-x-100 ltr:group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
                 </a>
                 <a href="#wholesale" class="btn btn-outline btn-lg w-full sm:w-auto">
-                    {{ __('طلبات الجملة') }}
+                    {{ __('طلبات المدارس') }}
                 </a>
             </div>
 
@@ -53,19 +49,23 @@
         </div>
 
         <!-- Visual: floating book stack with mouse parallax -->
-        <div data-parallax-scene class="relative mx-auto hidden h-[460px] w-full max-w-lg lg:block" aria-hidden="true">
+        <div data-parallax-scene
+             data-home-book-rotator
+             data-book-images="{{ $heroBooks->map(fn ($product) => asset('storage/' . $product->image))->values()->toJson() }}"
+             class="relative mx-auto hidden h-[460px] w-full max-w-lg lg:block"
+             aria-hidden="true">
             @if($heroBooks->count() >= 3)
                 <!-- Back-left book -->
                 <div data-depth="15" class="absolute start-[12%] top-[18%] w-[32%] will-change-transform">
-                    <div class="-rotate-6 -translate-y-2"><div class="book-cover aspect-[3/4] animate-float-slow shadow-xl shadow-gray-200/50 dark:shadow-black/50 rounded-lg overflow-hidden ring-1 ring-black/5"><img src="{{ asset('storage/'.$heroBooks[1]->image) }}" alt="" class="h-full w-full object-cover"></div></div>
+                    <div class="-rotate-6 -translate-y-2"><div class="book-cover aspect-[3/4] animate-float-slow shadow-xl shadow-gray-200/50 dark:shadow-black/50 rounded-lg overflow-hidden ring-1 ring-black/5"><img data-home-book-slot src="{{ asset('storage/'.$heroBooks[1]->image) }}" alt="" class="h-full w-full object-cover transition-opacity duration-300"></div></div>
                 </div>
                 <!-- Back-right book -->
                 <div data-depth="20" class="absolute end-[12%] top-[22%] w-[32%] will-change-transform">
-                    <div class="rotate-6 translate-y-2"><div class="book-cover aspect-[3/4] animate-float-slow animation-delay-2000 shadow-xl shadow-gray-200/50 dark:shadow-black/50 rounded-lg overflow-hidden ring-1 ring-black/5"><img src="{{ asset('storage/'.$heroBooks[2]->image) }}" alt="" class="h-full w-full object-cover"></div></div>
+                    <div class="rotate-6 translate-y-2"><div class="book-cover aspect-[3/4] animate-float-slow animation-delay-2000 shadow-xl shadow-gray-200/50 dark:shadow-black/50 rounded-lg overflow-hidden ring-1 ring-black/5"><img data-home-book-slot src="{{ asset('storage/'.$heroBooks[2]->image) }}" alt="" class="h-full w-full object-cover transition-opacity duration-300"></div></div>
                 </div>
                 <!-- Front book -->
                 <div data-depth="30" class="absolute start-1/2 top-[10%] w-[40%] -translate-x-1/2 rtl:translate-x-1/2 will-change-transform z-10">
-                    <div class="book-cover aspect-[3/4] animate-float shadow-2xl shadow-primary-900/20 dark:shadow-black/60 rounded-xl overflow-hidden ring-1 ring-black/10"><img src="{{ asset('storage/'.$heroBooks[0]->image) }}" alt="" class="h-full w-full object-cover"></div>
+                    <div class="book-cover aspect-[3/4] animate-float shadow-2xl shadow-primary-900/20 dark:shadow-black/60 rounded-xl overflow-hidden ring-1 ring-black/10"><img data-home-book-slot src="{{ asset('storage/'.$heroBooks[0]->image) }}" alt="" class="h-full w-full object-cover transition-opacity duration-300"></div>
                 </div>
             @else
                 <div class="absolute inset-0 flex items-center justify-center">
@@ -304,7 +304,7 @@
         <div class="grid items-center gap-10 lg:grid-cols-5">
             <div class="lg:col-span-3">
                 <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-primary-100 ring-1 ring-white/20">{{ __('للمدارس والمؤسسات') }}</span>
-                <h2 class="mt-5 font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl">{{ __('طلبات الجملة') }}</h2>
+                <h2 class="mt-5 font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl">{{ __('طلبات المدارس') }}</h2>
                 <p class="mt-4 max-w-xl text-lg leading-8 text-primary-100/80">{{ __('وفّر لمدرستك جميع المناهج بأسعار خاصة وتوصيل منظم.') }}</p>
                 <ul class="mt-8 grid gap-3 text-sm font-medium text-white/90 sm:grid-cols-2">
                     @foreach([__('أسعار خاصة للكميات'), __('توصيل مجدول للمدارس'), __('فواتير رسمية'), __('مدير حساب مخصص')] as $perk)

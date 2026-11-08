@@ -40,7 +40,8 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // On Hostinger symlinks are disabled, so write uploads directly into the web-served public_html/storage
+            'root' => env('PUBLIC_DISK_ROOT') ?: (is_dir(base_path('public_html')) ? base_path('public_html/storage') : storage_path('app/public')),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,

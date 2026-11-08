@@ -27,7 +27,7 @@ class ImageOptimizationService
         $filename = uniqid($prefix) . '.webp';
 
         // Ensure target directory exists on public disk
-        $dirPath = storage_path('app/public/' . $cleanDir);
+        $dirPath = \Illuminate\Support\Facades\Storage::disk('public')->path($cleanDir);
         if (!file_exists($dirPath)) {
             mkdir($dirPath, 0755, true);
         }

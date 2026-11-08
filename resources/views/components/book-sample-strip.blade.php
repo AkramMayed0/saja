@@ -2,8 +2,7 @@
 
 @if($product->sample_pdf)
 @php
-    $samplePdfUrl = '/' . ltrim(\Illuminate\Support\Facades\Storage::url($product->sample_pdf), '/');
-    $downloadUrl = route('shop.sample', $product->slug);
+    $samplePdfUrl = route('shop.sample.preview', $product->slug);
 @endphp
 
 <section id="book-sample-strip" class="mt-14 pt-10 border-t border-gray-200/80 dark:border-gray-800 scroll-mt-24 transition-colors">
@@ -22,7 +21,7 @@
             </p>
         </div>
 
-        <!-- Controls: Page Indicator, Fullscreen & Download Buttons -->
+        <!-- Controls: Page Indicator & Fullscreen Reader -->
         <div class="flex items-center flex-wrap gap-2.5 shrink-0">
             <!-- Page Indicator -->
             <div class="px-3.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 flex items-center gap-1.5 shadow-sm">
@@ -42,15 +41,6 @@
                 <span>{{ __('قراءة بملء الشاشة') }}</span>
             </button>
 
-            <!-- Direct PDF Download Link -->
-            <a href="{{ $downloadUrl }}"
-               title="{{ __('تحميل النسخة كملف PDF') }}"
-               class="btn btn-outline py-2 px-3.5 text-xs font-bold rounded-xl flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all shadow-sm">
-                <svg class="w-4 h-4 text-leaf-600 dark:text-leaf-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                <span>{{ __('تحميل العينة (PDF)') }}</span>
-            </a>
         </div>
     </div>
 
@@ -146,7 +136,7 @@
             </div>
         </div>
 
-        <!-- Zoom, Download & Close Controls -->
+        <!-- Zoom & Close Controls -->
         <div class="flex items-center gap-2">
             <!-- Zoom Out -->
             <button type="button" id="btn-modal-zoom-out" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer" title="{{ __('تصغير') }}">
@@ -161,12 +151,6 @@
             <button type="button" id="btn-modal-zoom-reset" class="hidden sm:inline-flex px-2 py-1 text-[11px] font-bold rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer" title="{{ __('إعادة الضبط') }}">
                 {{ __('إعادة الضبط') }}
             </button>
-
-            <!-- Download Button -->
-            <a href="{{ $downloadUrl }}" class="ms-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-primary-600 hover:bg-primary-500 text-white shadow transition-colors" title="{{ __('تحميل PDF') }}">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                <span class="hidden sm:inline">{{ __('تحميل PDF') }}</span>
-            </a>
 
             <!-- Close Modal -->
             <button type="button" id="btn-sample-close-modal" class="ms-2 w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-600 text-white flex items-center justify-center transition-colors cursor-pointer" title="{{ __('إغلاق') }}">
@@ -306,11 +290,10 @@
                 console.error('Error loading sample PDF:', err);
                 if (activeLoading) {
                     activeLoading.innerHTML = `
-                        <div class="text-center p-3">
-                            <p class="text-xs text-rose-500 font-bold mb-2">{{ __('تعذر عرض العينة التفاعلية مباشرة') }}</p>
-                            <a href="${@js($downloadUrl)}" class="btn btn-primary text-xs py-1.5 px-3 rounded-lg">{{ __('تحميل كملف PDF') }}</a>
-                        </div>
-                    `;
+                    <div class="text-center p-3">
+                        <p class="text-xs text-rose-500 font-bold mb-2">{{ __('تعذر عرض العينة التفاعلية مباشرة') }}</p>
+                    </div>
+                `;
                 }
             });
         });

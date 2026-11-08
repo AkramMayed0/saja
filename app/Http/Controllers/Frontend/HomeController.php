@@ -26,6 +26,12 @@ class HomeController extends Controller
         // جلب 4 منتجات عشوائية أو مميزة لتكون "رائجة"
         $trendingProducts = \App\Models\Product::with('category')->inRandomOrder()->take(4)->get();
 
+        // Covers available for the home page's rotating hero stack
+        $heroBooks = \App\Models\Product::whereNotNull('image')
+            ->inRandomOrder()
+            ->take(12)
+            ->get(['id', 'image']);
+
         // إحصائيات حقيقية لعرضها في الواجهة
         $productsCount = \App\Models\Product::count();
 
@@ -42,6 +48,6 @@ class HomeController extends Controller
             ->orderBy('level', 'asc')
             ->get();
         
-        return view('home', compact('categories', 'newProducts', 'trendingProducts', 'productsCount', 'sliderProducts'));
+        return view('home', compact('categories', 'newProducts', 'trendingProducts', 'heroBooks', 'productsCount', 'sliderProducts'));
     }
 }

@@ -104,7 +104,7 @@
     <ul>
         <li><strong>{{ __('اسم الجهة:') }}</strong> {{ __('مؤسسة سجى المتخصصة – قطاع النشر والخدمات التعليمية') }}</li>
         <li><strong>{{ __('البريد الإلكتروني:') }}</strong> <a href="mailto:info@saja-edu.com">info@saja-edu.com</a></li>
-        <li><strong>{{ __('الهاتف / واتساب:') }}</strong> <a href="tel:+967781818809" dir="ltr">+967 781 818 809</a></li>
+        <li><strong>{{ __('الهاتف / واتساب:') }}</strong> <a href="tel:+967781818809" dir="ltr">+967 781 818 809</a> - <a href="tel:+967781818810" dir="ltr">+967 781 818 810</a></li>
         <li><strong>{{ __('العنوان:') }}</strong> {{ __('الجمهورية اليمنية — صنعاء') }}</li>
     </ul>
 </x-legal-layout>

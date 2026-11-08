@@ -9,6 +9,7 @@ use App\Models\Bundle;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class ShopController extends Controller
 {
@@ -236,13 +237,17 @@ class ShopController extends Controller
         return view('shop.show', compact('product', 'relatedAccessories'));
     }
 
-    public function downloadSample(Product $product)
+    public function previewSample(Product $product)
     {
-        if (!$product->sample_pdf || !\Illuminate\Support\Facades\Storage::disk('public')->exists($product->sample_pdf)) {
-            return back()->with('error', __('عينة الكتاب غير متوفرة حالياً'));
+        if (!$product->sample_pdf || !Storage::disk('public')->exists($product->sample_pdf)) {
+            abort(404);
         }
 
-        $filename = 'عينة_' . \Illuminate\Support\Str::slug($product->title) . '.pdf';
-        return \Illuminate\Support\Facades\Storage::disk('public')->download($product->sample_pdf, $filename);
+        return Storage::disk('public')->response(
+            $product->sample_pdf,
+            basename($product->sample_pdf),
+            ['X-Content-Type-Options' => 'nosniff'],
+            'inline'
+        );
     }
 }

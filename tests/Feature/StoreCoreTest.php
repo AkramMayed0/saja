@@ -93,4 +93,31 @@ class StoreCoreTest extends TestCase
         $response = $this->get('/shop');
         $response->assertStatus(200);
     }
+
+    public function test_home_page_renders_three_rotating_book_covers(): void
+    {
+        $category = Category::create([
+            'name' => 'Hero Books',
+            'slug' => 'hero-books',
+        ]);
+
+        foreach (range(1, 4) as $number) {
+            Product::create([
+                'category_id' => $category->id,
+                'title' => "Hero Book {$number}",
+                'slug' => "hero-book-{$number}",
+                'description' => 'Home page hero cover',
+                'price' => 10,
+                'stock' => 10,
+                'image' => "products/hero-book-{$number}.webp",
+            ]);
+        }
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('data-home-book-rotator');
+        $this->assertSame(3, substr_count($response->getContent(), 'data-home-book-slot'));
+        $response->assertSee('products\/hero-book-', false);
+    }
 }
